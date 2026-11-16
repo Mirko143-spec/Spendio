@@ -14,6 +14,7 @@ describe('cleanMerchant', () => {
     // reference codes
     ['Spotify P4938CFA38', 'Spotify'],
     ['Reklamfritt *BB4SS7W', 'Reklamfritt'],
+    ['UBER *EATS', 'UBER EATS'], // letter-only star suffix is part of the name
     // processor prefixes
     ['NMB*Nybergs Konditor', 'Nybergs Konditor'],
     ['WL *STEAM PURCHASE', 'STEAM PURCHASE'],
