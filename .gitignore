@@ -1,0 +1,19 @@
+# Dependencies & build output
+node_modules/
+dist/
+*.tsbuildinfo
+.vite/
+
+# Never commit real bank statements. Only synthetic fixtures are allowed.
+*.csv
+!fixtures/*.csv
+*.xlsx
+*.xls
+*.pdf
+spendio-backup-*.json
+
+# Env & OS
+.env
+.env.*
+.DS_Store
+*.log
