@@ -196,9 +196,11 @@ A user's manual category on a single transaction (`categorySource = 'manual'`) i
 ## 9. Periods (payday months)
 
 - Setting: **period start day** `D` (1–28), default **25**, plus "adjust to the previous banking day" (default on).
-- `payday(year, month)` = the last Swedish banking day on or before day `D` of that month.
-- **Period labelled month M** runs from `payday(M − 1)` to `payday(M) − 1 day`. Example: payday Nov 25 → period **"December"** = Nov 25 – Dec 22 (December payday is the 23rd).
-- If `D = 1`, periods are plain calendar months.
+- `payday(year, month)` = the last Swedish banking day on or before day `D` of that month (or exactly day `D` when the adjustment is off). With `D = 1` it is always the 1st, so periods are plain calendar months.
+- A period runs from one `payday` to the day before the next, and is **labelled by the month it mostly falls in**, using a cutoff fixed per start day:
+  - `D` 16–28: the label is the month **after** the start. Example: payday Nov 25 → period **"December"** = Nov 25 – Dec 22 (December payday is the 23rd).
+  - `D` 1–15: the label is the month the period **starts in**. Example: `D = 1` → **"November"** = Nov 1 – Nov 30.
+  - The cutoff can't vary per month (that would give some periods two labels or none). For mid-month start days the split is roughly even, so the label there is a convention.
 - Periods are **always derived, never stored**, so changing `D` just recomputes everything.
 
 **Swedish banking holidays** (computed locally, no API): Nyårsdagen (1 Jan), Trettondedag jul (6 Jan), Långfredagen, Påskdagen, Annandag påsk, Första maj, Kristi himmelsfärdsdag (Easter + 39), Nationaldagen (6 Jun), Midsommarafton (Fri 19–25 Jun), Midsommardagen, Alla helgons dag, Julafton (24 Dec), Juldagen, Annandag jul, Nyårsafton (31 Dec). Plus all Saturdays and Sundays. Easter via the anonymous Gregorian algorithm.
