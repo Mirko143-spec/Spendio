@@ -187,9 +187,8 @@ A user's manual category on a single transaction (`categorySource = 'manual'`) i
 7. Go to **review** (skippable).
 
 ### Dedup
-- `fingerprint = hash(accountId, bookingDate, amount, description, balance)`
-- **Multiset-aware:** if a fingerprint appears *n* times in the file and *m* times in the database, import `max(0, n − m)` copies. (Identical rows, e.g. two `ROBLOX.COM` purchases on the same day, are both real; the balance usually tells them apart anyway.)
-- Without a balance column (generic mapper): fingerprint is `(accountId, date, amount, description, occurrenceIndexWithinFile)`.
+- `fingerprint = accountId · bookingDate · amount · description · balance · #occurrence`. These are the fields joined into a readable key, **not a hash**: a hash collision would silently drop a real transaction as a duplicate. The description's whitespace is normalized; line numbers are not included. `balance` is empty when the source has none.
+- `#occurrence` numbers identical rows within one file (`#0`, `#1`, …). This makes dedup **multiset-aware**: if a file has *n* copies of a row and *m* are already stored, `max(0, n − m)` are imported. (Identical rows, e.g. two `ROBLOX.COM` purchases on the same day, are both real; the balance usually tells them apart anyway, and the occurrence index covers sources without a balance column.)
 - Re-imports never change existing transactions or their categories.
 - **Undo import:** deletes all transactions of a batch (asks first).
 
