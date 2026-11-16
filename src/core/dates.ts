@@ -13,6 +13,16 @@ function toUtcMs(iso: string): number {
   return Date.parse(`${iso}T00:00:00Z`);
 }
 
+/** `iso` shifted by `days` (may be negative). */
+export function addDays(iso: string, days: number): string {
+  return new Date(toUtcMs(iso) + days * MS_PER_DAY).toISOString().slice(0, 10);
+}
+
+/** Day of the week: 0 = Sunday … 6 = Saturday. */
+export function weekday(iso: string): number {
+  return new Date(toUtcMs(iso)).getUTCDay();
+}
+
 /** Whole days from `from` to `to` (positive if `to` is later). */
 export function daysBetween(from: string, to: string): number {
   return Math.round((toUtcMs(to) - toUtcMs(from)) / MS_PER_DAY);
