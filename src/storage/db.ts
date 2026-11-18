@@ -1,7 +1,7 @@
 import Dexie, { type EntityTable } from 'dexie';
 import type { Account } from '../core/account.ts';
 import type { Budget } from '../core/budgets.ts';
-import { DEFAULT_CATEGORIES, type Category } from '../core/categories.ts';
+import { CATEGORY_IDS, DEFAULT_CATEGORIES, type Category } from '../core/categories.ts';
 import type { CsvMapping } from '../core/csv/mapping.ts';
 import type { ImportBatch, Transaction } from '../core/import.ts';
 import type { Rule } from '../core/rules.ts';
@@ -41,6 +41,16 @@ export class SpendioDB extends Dexie {
       csvMappings: 'id, &headerSignature',
       settings: 'key',
     });
+
+    // v2: databases created before "Swish from people" existed get it added. Only that category,
+    // so defaults a person deleted on purpose stay deleted. (New databases get it from `populate`.)
+    this.version(2)
+      .stores({})
+      .upgrade(async (tx) => {
+        const categories = tx.table<Category, string>('categories');
+        const added = DEFAULT_CATEGORIES.find((c) => c.id === CATEGORY_IDS.swishFromPeople)!;
+        if (!(await categories.get(added.id))) await categories.add(added);
+      });
 
     // Runs once, when the database is first created. Accounts are created by the first import.
     this.on('populate', (tx) => {

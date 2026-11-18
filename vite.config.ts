@@ -11,8 +11,8 @@ export default defineConfig({
     sourcemap: false,
   },
   test: {
-    include: ['src/**/*.test.ts', 'fixtures/**/*.test.ts'],
+    include: ['src/**/*.test.{ts,tsx}', 'fixtures/**/*.test.ts'],
     environment: 'node',
-    setupFiles: ['src/storage/test-setup.ts'],
+    setupFiles: ['src/storage/test-setup.ts', 'src/ui/test-setup.ts'],
   },
 });

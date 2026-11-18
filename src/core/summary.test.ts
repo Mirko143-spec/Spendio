@@ -80,3 +80,18 @@ describe('percentChange', () => {
     expect(percentChange(-50, -100)).toBeCloseTo(0.5);
   });
 });
+
+describe('splitting a bill with Swish', () => {
+  it('lowers spending, not raises income, when a friend pays back via "Swish from people"', () => {
+    // Pay 900 kr for dinner by card; a friend Swishes back their half.
+    const s = summarizePeriod(
+      [tx('2026-12-01', 1359200, C.income), tx('2026-12-05', -90000, C.restaurants), tx('2026-12-06', 45000, C.swishFromPeople)],
+      DEFAULT_CATEGORIES,
+      '2026-12',
+    );
+    expect(s.netSpending).toBe(45000);
+    expect(s.income).toBe(1359200);
+    expect(s.spentByCategory).toEqual({ [C.restaurants]: 90000, [C.swishFromPeople]: -45000 });
+    expect(s.leftOver).toBe(1359200 - 45000);
+  });
+});

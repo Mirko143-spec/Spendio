@@ -128,9 +128,11 @@ Each category has a `type`:
 - `income`: system category **Income**, cannot be deleted
 - `transfer`: system category **Transfer**, with `transferKind`: `savings` or `internal`; cannot be deleted. Never counts as spending or income.
 
-**Default spending categories:** Groceries · Restaurants & Cafés · Transport · Shopping · Subscriptions · Gaming · Entertainment · Health & Fitness · Housing & Bills · Travel · Swish to people · Other
+**Default spending categories:** Groceries · Restaurants & Cafés · Transport · Shopping · Subscriptions · Gaming · Entertainment · Health & Fitness · Housing & Bills · Travel · Swish to people · Swish from people · Other
 
 **System:** Income · Transfer: Savings · Transfer: Internal
+
+**Swish from people** is the mirror of "Swish to people": money back from people (split bills, someone paying you back). It is a spending category whose total is usually negative, so it **lowers total spending instead of inflating income**: pay 900 kr for dinner, get 450 kr back → Spent 450 kr. The dinner still shows in full under its own category, with the repayment as a separate "money back" line. Gifts from people belong in Income. Added to existing databases by the schema v2 upgrade. (Later: link a repayment to the purchase it pays back, so it offsets that exact category.)
 
 **Needs review** is not a category: it's `categoryId = null`.
 
@@ -173,12 +175,13 @@ A user's manual category on a single transaction (`categorySource = 'manual'`) i
 |---|---|
 | `deposit` | Income |
 | `swish_out` to a person | **Swish to people**, flagged as a suggestion in review |
-| `swish_in` from a person | **Needs review** |
+| `swish_in` from a person | **Swish from people**, flagged as a suggestion in review |
 | `swish_refund` | Category of the counterparty's rule, else Needs review |
 | everything else unmatched | Needs review |
 
 ### 7.5 Learning from corrections
 - In review: category per merchant group + **"Remember for future imports"** (checked by default; **unchecked by default for Swish to or from people**). Remember = create a user `equals` rule on `merchantKey` (+ `kind` for Swish).
+- A category chosen in review is stored as the user's own (`categorySource = 'manual'`). Keeping a pre-filled suggestion confirms it; clearing one sends the group back to Needs review; groups left untouched (including unconfirmed suggestions) stay in review. All decisions from one review are saved in a single storage transaction.
 - Editing a single transaction later offers **"Only this one"** or **"This and future ones from <merchant>"**, plus an option to apply to past uncategorized/rule-assigned transactions from that merchant. Manual assignments are never touched.
 
 ## 8. Import pipeline
@@ -239,12 +242,19 @@ A user's manual category on a single transaction (`categorySource = 'manual'`) i
 Clicking a category anywhere → Transactions filtered by that category and period.
 
 ### Other pages
-- **Upload** → import summary → **Review** (grouped by merchant, sorted by absolute total, category dropdown + "Remember" checkbox, "Skip, I'll do it later")
+- **Upload** (file picker + drag and drop; supported banks listed from the format registry; clear errors for unsupported, empty or oversized files) → **Import summary** (new / already imported / lines that couldn't be read, with line numbers) → **Review** (one group per merchant *and* kind, so "Swish to Anna" and "Swish from Anna" are separate decisions; sorted by absolute total; category dropdown pre-filled with any suggestion + "Remember" checkbox; "Skip for now"). Until the dashboard exists, the flow ends on a "Saved on this device" screen.
+- Person names (Swish counterparties) are tidied for display only: `DOE,JOHN` → "John Doe", all-caps names re-cased. Rules keep matching the original text.
 - **Transactions**: search, filter (period, category, kind, needs review), inline category edit
 - **History**: per budgeted category, month-by-month spending vs that month's limit
 - **Savings**: Left over, savings rate, Moved to savings, month-by-month chart
 - **Categories & Rules**: edit categories, colors and limits; list/delete user rules; view built-in rules
 - **Settings**: period start day, export/import backup, wipe all data, (v1.1) passcode
+
+### Visual design
+- **Idea:** a bank export is a cramped wall of semicolons; Spendio is calm, airy and precise. The memorable element is the **amounts**: large tabular figures in Swedish format, currency lighter, right-aligned like a ledger. Everything else stays quiet.
+- **Palette (from Swedish nature):** snow `#f7f9fa` background, granite `#22292f` text, pine `#1e5b4b` accent, lingon `#b3263e` only for warnings, lichen `#5b6a63` secondary text, frost `#dde3e1` dividers; a night-forest dark mode. Money in is pine with `+`; money out stays neutral (spending isn't an error). Every text/background pair meets WCAG AA.
+- **Type:** Hanken Grotesk only, self-hosted (the CSP blocks font CDNs); its default figures are tabular.
+- **Layout:** one left-aligned column (max 44rem), dividers only where they separate items, no card stacks, no all-caps labels. Responsive to 390 px, visible keyboard focus, reduced motion respected.
 
 ## 13. Data model (TypeScript, core)
 
@@ -305,18 +315,22 @@ src/
     budgets.ts         limits with effectiveFrom, status
     summary.ts         period aggregates (spent, income, left over, savings, needs review)
     import.ts          pure import pipeline, Transaction + ImportBatch types
+    review.ts          groupForReview + ReviewDecision
+    names.ts           tidy person names for display
     account.ts, settings.ts, backup.ts
   storage/           the ONLY module that touches IndexedDB (Dexie); encryption is added here in v1.1
     db.ts              schema v1 + first-run defaults
     store.ts           SpendioStore: the API the UI uses (atomic import, edits, rules, budgets, backup)
-  ui/                React pages + components
+  ui/                React screens + components (App flow, UploadScreen, ImportSummary, ReviewScreen, Amount, format.ts)
+    dev/               dev-only previews (dropped from production builds)
+.claude/skills/      project skills: frontend-design, webapp-testing (Anthropic, Apache-2.0)
 fixtures/            synthetic CSVs only (fake names, no personnummer)
 docker/              nginx.conf, security-headers.conf
 Dockerfile, compose.yaml
 ```
 
 ### Stack
-Vite + React + TypeScript · Tailwind CSS · Dexie (IndexedDB) · Papa Parse · Recharts · Vitest. Keep dependencies minimal; add new ones only with a reason.
+Vite + React + TypeScript · Tailwind CSS · Dexie (IndexedDB) · Papa Parse · Recharts · Hanken Grotesk via Fontsource (self-hosted) · Vitest, with fake-indexeddb for storage tests and Testing Library + jsdom for component tests (`*.test.tsx`, opted in per file). Keep dependencies minimal; add new ones only with a reason.
 
 ### Backup format
 ```json

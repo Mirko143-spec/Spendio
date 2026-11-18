@@ -7,7 +7,7 @@ describe('DEFAULT_CATEGORIES', () => {
     expect(new Set(DEFAULT_CATEGORIES.map((c) => c.name)).size).toBe(DEFAULT_CATEGORIES.length);
   });
 
-  it('has the 12 agreed spending categories, in order', () => {
+  it('has the 13 agreed spending categories, in order', () => {
     expect(DEFAULT_CATEGORIES.filter(countsAsSpending).map((c) => c.name)).toEqual([
       'Groceries',
       'Restaurants & Cafés',
@@ -20,6 +20,7 @@ describe('DEFAULT_CATEGORIES', () => {
       'Housing & Bills',
       'Travel',
       'Swish to people',
+      'Swish from people',
       'Other',
     ]);
   });
@@ -43,5 +44,13 @@ describe('DEFAULT_CATEGORIES', () => {
 describe('isSavingsTransfer', () => {
   it('is only true for Transfer: Savings', () => {
     expect(DEFAULT_CATEGORIES.filter(isSavingsTransfer).map((c) => c.id)).toEqual([CATEGORY_IDS.savings]);
+  });
+});
+
+describe('Swish from people', () => {
+  it('is an editable spending category (money back) that mirrors "Swish to people"', () => {
+    const from = DEFAULT_CATEGORIES.find((c) => c.id === CATEGORY_IDS.swishFromPeople);
+    expect(from).toMatchObject({ name: 'Swish from people', type: 'spending', system: false });
+    expect(countsAsSpending(from!)).toBe(true);
   });
 });
