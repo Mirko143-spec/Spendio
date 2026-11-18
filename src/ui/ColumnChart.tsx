@@ -9,6 +9,7 @@ export interface ColumnDatum {
 }
 
 const HEIGHT = 160; // px of plot area, split between above and below zero
+const LABEL_ROOM = 20; // px kept free for a value label at a column's end
 
 /**
  * Columns per period around a zero baseline (dataviz: change over time with polarity → columns,
@@ -19,9 +20,13 @@ export function ColumnChart({ title, data }: { title: string; data: readonly Col
   const [active, setActive] = useState<string | null>(null);
   const maxUp = Math.max(0, ...data.map((d) => d.value));
   const maxDown = Math.max(0, ...data.map((d) => -d.value));
-  const range = maxUp + maxDown || 1;
-  const upHeight = (maxUp / range) * HEIGHT;
-  const downHeight = HEIGHT - upHeight;
+  // Room for a value label on each side that has columns, so a short column's label never runs
+  // into the baseline or the month name. One scale for both sides keeps the columns comparable.
+  const roomUp = maxUp > 0 ? LABEL_ROOM : 0;
+  const roomDown = maxDown > 0 ? LABEL_ROOM : 0;
+  const scale = (HEIGHT - roomUp - roomDown) / (maxUp + maxDown || 1);
+  const upHeight = maxUp * scale + roomUp;
+  const downHeight = maxDown * scale + roomDown;
 
   return (
     <figure>
@@ -29,7 +34,7 @@ export function ColumnChart({ title, data }: { title: string; data: readonly Col
       <ul aria-label={title} className="mt-8 grid" style={{ gridTemplateColumns: `repeat(${data.length}, minmax(0, 1fr))` }}>
         {data.map((d) => {
           const label = d.period.label;
-          const height = Math.round((Math.abs(d.value) / range) * HEIGHT);
+          const height = Math.round(Math.abs(d.value) * scale);
           const negative = d.value < 0;
           return (
             <li
@@ -46,7 +51,7 @@ export function ColumnChart({ title, data }: { title: string; data: readonly Col
               <div aria-hidden="true" className="flex w-full flex-col items-center justify-end" style={{ height: upHeight }}>
                 {!negative && (
                   <>
-                    <span className="mb-1 text-xs font-semibold whitespace-nowrap">{wholeAmount(d.value)}</span>
+                    {d.value !== 0 && <span className="mb-1 text-xs font-semibold whitespace-nowrap">{wholeAmount(d.value)}</span>}
                     {d.value > 0 && (
                       <span data-sign="positive" className="w-full max-w-6 rounded-t-[4px] bg-chart-mark" style={{ height }} />
                     )}

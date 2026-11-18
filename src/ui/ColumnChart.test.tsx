@@ -33,7 +33,7 @@ describe('ColumnChart', () => {
     expect(neg).toHaveClass('bg-chart-negative');
     expect(pos).toHaveClass('bg-chart-mark');
     const total = parseFloat(neg.style.height) + parseFloat(pos.style.height);
-    expect(total).toBeGreaterThan(155); // the two extremes fill the 160 px plot together
+    expect(total).toBeGreaterThan(115); // the two extremes share 160 px minus 2 × 20 px of label room
     expect(parseFloat(pos.style.height) / parseFloat(neg.style.height)).toBeCloseTo(1439200 / 56240, -1);
     expect(dec!.querySelector('[data-sign]')).toBeNull(); // zero draws no column
   });
@@ -45,5 +45,19 @@ describe('ColumnChart', () => {
     fireEvent.pointerLeave(nov!);
     fireEvent.focus(oct!);
     expect(plain(screen.getByRole('tooltip').textContent)).toBe('−562 kr 25 Sept – 22 Oct');
+  });
+});
+
+describe('ColumnChart labels', () => {
+  it('leaves room for the label of a tiny column below zero', () => {
+    const [oct] = setup();
+    const below = oct!.querySelector<HTMLElement>('[data-sign="negative"]')!.parentElement!;
+    expect(parseFloat(below.style.height)).toBeGreaterThanOrEqual(20);
+  });
+
+  it('does not label empty periods (the value is still announced)', () => {
+    const [, , dec] = setup();
+    expect(dec!.textContent).toBe('Dec');
+    expect(plain(dec!.getAttribute('aria-label'))).toBe('December 2026: 0 kr');
   });
 });
