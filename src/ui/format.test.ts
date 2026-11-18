@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { amountParts, dateRange, groupContext, groupTitle } from './format.ts';
+import { amountParts, dateRange, groupContext, groupTitle, listNames } from './format.ts';
 
 describe('amountParts', () => {
   it('splits sign, Swedish-formatted number and currency', () => {
@@ -44,5 +44,13 @@ describe('groupTitle for people', () => {
     expect(groupTitle({ kind: 'swish_out', merchantDisplay: 'EXEMPELBUTIKEN AB', isPerson: false })).toBe(
       'Swish to EXEMPELBUTIKEN AB',
     );
+  });
+});
+
+describe('listNames', () => {
+  it('joins names in plain English', () => {
+    expect(listNames(['Nordea'])).toBe('Nordea');
+    expect(listNames(['Nordea', 'SEB'])).toBe('Nordea and SEB');
+    expect(listNames(['Nordea', 'SEB', 'Swedbank'])).toBe('Nordea, SEB and Swedbank');
   });
 });

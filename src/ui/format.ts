@@ -60,3 +60,9 @@ export function groupContext(group: Pick<ReviewGroup, 'kind' | 'transactionIds' 
   const n = group.transactionIds.length;
   return `${n} ${n === 1 ? one : many}, ${dateRange(group.firstDate, group.lastDate)}`;
 }
+
+/** "Nordea", "Nordea and SEB", "Nordea, SEB and Swedbank". */
+export function listNames(names: readonly string[]): string {
+  if (names.length <= 1) return names[0] ?? '';
+  return `${names.slice(0, -1).join(', ')} and ${names.at(-1)}`;
+}

@@ -1,5 +1,9 @@
 import { useId, useState, type DragEvent } from 'react';
+import { BANK_FORMATS } from '../core/formats/index.ts';
 import { UnsupportedFormatError } from '../core/import.ts';
+import { listNames } from './format.ts';
+
+const SUPPORTED_BANKS = listNames(BANK_FORMATS.map((f) => f.name));
 
 /** Larger than any plausible statement export; protects the tab from reading huge files. */
 export const MAX_FILE_BYTES = 10 * 1024 * 1024;
@@ -11,7 +15,7 @@ interface UploadScreenProps {
 
 function errorMessage(error: unknown): string {
   if (error instanceof UnsupportedFormatError) {
-    return 'Spendio can’t read this file yet. It reads CSV exports from Nordea, so check that you exported your transactions as CSV rather than PDF.';
+    return `Spendio can’t read this file yet. It reads CSV exports from ${SUPPORTED_BANKS}, so check that you exported your transactions as CSV rather than PDF.`;
   }
   return `This file couldn’t be imported: ${error instanceof Error ? error.message : String(error)}`;
 }
@@ -82,7 +86,7 @@ export function UploadScreen({ onImport }: UploadScreenProps) {
             e.target.value = '';
           }}
         />
-        <p className="text-sm text-ink-muted">or drop it here. Works with Nordea CSV exports.</p>
+        <p className="text-sm text-ink-muted">or drop it here. Works with CSV exports from {SUPPORTED_BANKS}.</p>
       </div>
 
       {error && (
