@@ -243,6 +243,16 @@ A user's manual category on a single transaction (`categorySource = 'manual'`) i
 
 ## 12. Screens
 
+### Landing page (`#/welcome`)
+What Spendio is, for someone who has never seen it. First-time visitors (no transactions, no route in the URL) land here instead of an empty overview; everyone else reaches it from **About Spendio** in the footer. The app menu is hidden on it.
+1. Headline "See where your money goes.", one paragraph on what Spendio does and that nothing is uploaded, then **Try it with sample data** and **Add your own statement**. With data already there, a single **Open your overview** instead.
+2. A before/after of five sample-statement lines (raw description → merchant, amount, category), computed by the real importer from the bundled sample so it can only show what the app does.
+3. **How it works**: export a CSV → Spendio sorts it → follow your payday month.
+4. **What you get**: Overview, Budgets, History, Savings, Transactions.
+5. **Your data stays with you**: no account or server, the CSP blocks sending data, personnummer removed on import; data lives in this browser, so keep a backup.
+6. **Made for Sweden, for now**: kronor, Swedish paydays and holidays; any bank's CSV works.
+7. Closing call to action repeating the buttons.
+
 ### Dashboard (selected period)
 1. Period switcher `‹ Oct   November 2026   Dec ›` with the period's real dates (e.g. "23 Oct – 24 Nov"), limited to the first period with data and today's period. Opens on today's period if it has transactions, otherwise on the latest period that does.
 2. **Needs review** notice (only when > 0), near the top because it explains incomplete totals; links to the review screen.
