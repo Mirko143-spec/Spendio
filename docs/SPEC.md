@@ -22,7 +22,8 @@ Spendio is a budgeting web app. You upload a bank statement CSV; Spendio automat
 ## 3. Scope
 
 ### v1
-- Nordea CSV import (preset) + generic CSV column mapper (saved per file layout)
+- CSV import from any bank: built-in bank-format presets (Nordea first; more Swedish banks can be added as presets) + generic CSV column mapper for everything else (saved per file layout)
+- One country, Sweden (SEK, Swedish banking days and merchant rules), behind a country definition so others can be added later
 - Duplicate-safe re-imports, import summary, undo an import batch
 - Rules-based categorization (built-in Swedish rules + rules learned from user corrections)
 - Post-upload review, grouped by merchant
@@ -42,12 +43,13 @@ Spendio is a budgeting web app. You upload a bank statement CSV; Spendio automat
 - Optional accounts + sync across devices (backend)
 - Multiple accounts (e.g. savings, credit card), multi-currency
 - More bank presets, PDF statements
+- More countries (a new `country/` definition: currency, banking days, payday, merchant rules, ID scrubbing)
 - Split transactions, budget rollover, per-month limit overrides
 - Swedish UI language
 - Backup *merge* (v1 backup import replaces everything)
 
 ### Explicitly out of scope for v1
-Server-side storage, user accounts, AI, PDF parsing, multiple accounts, multiple currencies, split transactions, rollover.
+Server-side storage, user accounts, AI, PDF parsing, multiple accounts per bank, countries other than Sweden, multiple currencies, split transactions, rollover.
 
 ## 4. Data input
 
