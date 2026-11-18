@@ -321,14 +321,15 @@ src/
     review.ts          groupForReview + ReviewDecision
     dashboard.ts       buildDashboard: budget rows, overall limit, change vs previous period
     period-nav.ts      which periods to offer and which to open on
+    transaction-filter.ts  period / category / type / search filtering, newest first
     names.ts           tidy person names for display
     account.ts, settings.ts, backup.ts
   storage/           the ONLY module that touches IndexedDB (Dexie); encryption is added here in v1.1
     db.ts              schema (v2: adds Swish from people to older databases) + first-run defaults
     store.ts           SpendioStore: the API the UI uses (atomic import, edits, rules, budgets, backup)
-  ui/                React components (Amount, PeriodSwitcher, Headlines, BudgetList, SpendingChart, UploadScreen, ImportSummary, ReviewScreen, format.ts)
-    App.tsx            shell + navigation; hash routes #/ (overview), #/add, #/review (router.ts, no router library)
-    pages/             OverviewPage, AddStatementPage, ReviewPage
+  ui/                React components (Amount, PeriodSwitcher, Headlines, BudgetList, SpendingChart, TransactionFilters, TransactionList, UploadScreen, ImportSummary, ReviewScreen, format.ts)
+    App.tsx            shell + navigation; hash routes #/, #/transactions, #/add, #/review with query params for page state (router.ts, no router library)
+    pages/             OverviewPage, TransactionsPage, AddStatementPage, ReviewPage
     StoreContext.tsx, useStore.ts   opens the store once and shares it
     dev/               dev-only previews (dropped from production builds)
 .claude/skills/      project skills: frontend-design, webapp-testing (Anthropic, Apache-2.0)
