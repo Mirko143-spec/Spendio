@@ -11,6 +11,8 @@ export const MAX_FILE_BYTES = 10 * 1024 * 1024;
 interface UploadScreenProps {
   /** Imports the file's text. Throwing shows the error and lets the person try another file. */
   onImport: (text: string) => Promise<void>;
+  /** Offered only when there is no data yet: loads made-up transactions to explore with. */
+  onTrySample?: () => Promise<void>;
 }
 
 function errorMessage(error: unknown): string {
@@ -20,7 +22,7 @@ function errorMessage(error: unknown): string {
   return `This file couldn’t be imported: ${error instanceof Error ? error.message : String(error)}`;
 }
 
-export function UploadScreen({ onImport }: UploadScreenProps) {
+export function UploadScreen({ onImport, onTrySample }: UploadScreenProps) {
   const inputId = useId();
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -90,6 +92,21 @@ export function UploadScreen({ onImport }: UploadScreenProps) {
         </label>
         <p className="text-sm text-ink-muted">or drop it here. {SUPPORTED_BANKS} files import directly; for other banks you set up the layout once.</p>
       </div>
+
+      {onTrySample && (
+        <p className="mt-6 text-sm text-ink-muted">
+          No statement at hand?{' '}
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => void onTrySample()}
+            className="font-medium text-accent underline"
+          >
+            Try Spendio with sample data
+          </button>
+          . It loads made-up transactions you can remove again.
+        </p>
+      )}
 
       {error && (
         <p role="alert" className="mt-6 max-w-prose font-medium text-danger">
