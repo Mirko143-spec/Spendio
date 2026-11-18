@@ -220,6 +220,39 @@ export class SpendioStore {
     });
   }
 
+  /**
+   * "This and future ones from <merchant>" (docs/SPEC.md §7.5): sets the transaction's category,
+   * saves a rule so future imports follow it, and with `includePast` also re-categorizes earlier
+   * transactions from the same merchant. Transactions the person categorized by hand are never
+   * touched. Returns how many transactions changed (including this one).
+   */
+  async applyCategoryToMerchant(
+    transactionId: string,
+    categoryId: string,
+    options: { includePast: boolean },
+    context: { now: string; newId: () => string },
+  ): Promise<number> {
+    const { db } = this;
+    return db.transaction('rw', db.transactions, db.rules, db.categories, async () => {
+      const t = await db.transactions.get(transactionId);
+      if (!t) throw new Error(`Unknown transaction: ${transactionId}`);
+      if (!(await db.categories.get(categoryId))) throw new Error(`Unknown category: ${categoryId}`);
+
+      const rule = merchantRule(t.merchantKey, t.kind, categoryId);
+      await this.saveUserRule(rule, context);
+
+      const change = { categoryId, categorySource: 'user_rule' as const, suggested: false };
+      await db.transactions.update(t.id, change);
+      if (!options.includePast) return 1;
+      const others = await db.transactions
+        .where('merchantKey')
+        .equals(t.merchantKey)
+        .filter((o) => o.id !== t.id && o.categorySource !== 'manual' && (!rule.kind || o.kind === rule.kind))
+        .modify(change);
+      return 1 + others;
+    });
+  }
+
   // ── User rules ─────────────────────────────────────────────────────────────
 
   listUserRules(): Promise<Rule[]> {
