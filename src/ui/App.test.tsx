@@ -27,16 +27,31 @@ const upload = async (text: string) =>
   userEvent.upload(await screen.findByLabelText('Choose a CSV file'), new File([text], 'statement.csv', { type: 'text/csv' }));
 
 describe('App', () => {
-  it('sends a first-time visitor to "Add statement"', async () => {
+  it('shows a first-time visitor the landing page, without the app menu', async () => {
     render(<App dbName={dbName()} />);
-    expect(await screen.findByRole('heading', { name: 'Add a bank statement' })).toBeInTheDocument();
-    expect(window.location.hash).toBe('#/add');
-    expect(screen.getByRole('link', { name: 'Add statement' })).toHaveAttribute('aria-current', 'page');
+    expect(await screen.findByRole('heading', { level: 1, name: 'See where your money goes.' })).toBeInTheDocument();
+    expect(window.location.hash).toBe('#/welcome');
+    expect(screen.queryByRole('navigation', { name: 'Main' })).not.toBeInTheDocument();
+  });
+
+  it('links back to the landing page, which then leads to your overview', async () => {
+    const name = dbName();
+    const user = userEvent.setup();
+    window.location.hash = '#/add';
+    render(<App dbName={name} />);
+    await upload(fixture);
+    await user.click(await screen.findByRole('button', { name: 'Review later' }));
+    await user.click(await screen.findByRole('link', { name: 'About Spendio' }));
+    expect(await screen.findByRole('heading', { level: 1, name: 'See where your money goes.' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /sample data/ })).not.toBeInTheDocument();
+    await user.click(screen.getAllByRole('link', { name: 'Open your overview' })[0]!);
+    expect(await screen.findByRole('heading', { name: 'Overview' })).toBeInTheDocument();
   });
 
   it('imports, summarizes, reviews, saves, and lands on the overview', async () => {
     const name = dbName();
     const user = userEvent.setup();
+    window.location.hash = '#/add';
     render(<App dbName={name} />);
 
     await upload(fixture);
@@ -59,6 +74,7 @@ describe('App', () => {
   it('opens on the overview once there is data, and reports nothing new on re-import', async () => {
     const name = dbName();
     const user = userEvent.setup();
+    window.location.hash = '#/add';
     const { unmount } = render(<App dbName={name} />);
     await upload(fixture);
     await user.click(await screen.findByRole('button', { name: 'Review later' }));
@@ -75,16 +91,17 @@ describe('App', () => {
   });
 
   it('shows a clear error for files that are not a table at all', async () => {
+    window.location.hash = '#/add';
     render(<App dbName={dbName()} />);
     await upload('This is not a statement');
     expect(await screen.findByRole('alert')).toHaveTextContent('This doesn’t look like a bank statement export');
   });
 
-  it('offers sample data on a first visit, and lands on the overview with it', async () => {
+  it('offers sample data on the landing page, and lands on the overview with it', async () => {
     const name = dbName();
     const user = userEvent.setup();
     render(<App dbName={name} />);
-    await user.click(await screen.findByRole('button', { name: 'Try Spendio with sample data' }));
+    await user.click((await screen.findAllByRole('button', { name: 'Try it with sample data' }))[0]!);
     expect(await screen.findByRole('heading', { name: 'Budgets' })).toBeInTheDocument();
     const store = await openStore(name);
     expect((await store.listImportBatches()).map((b) => b.label)).toEqual(['Sample data']);
@@ -98,6 +115,7 @@ describe('App', () => {
   it('sets up an unknown bank’s layout once, then imports that layout directly', async () => {
     const generic = readFileSync(join(import.meta.dirname, '../../fixtures/generic-sample.csv'), 'utf8');
     const user = userEvent.setup();
+    window.location.hash = '#/add';
     render(<App dbName={dbName()} />);
 
     await upload(generic);
