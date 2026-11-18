@@ -7,6 +7,7 @@ import { ReviewPage } from './pages/ReviewPage.tsx';
 import { SavingsPage } from './pages/SavingsPage.tsx';
 import { SettingsPage } from './pages/SettingsPage.tsx';
 import { TransactionsPage } from './pages/TransactionsPage.tsx';
+import { WelcomePage } from './pages/WelcomePage.tsx';
 import { hrefFor, navigate, useRoute, type Route } from './router.ts';
 import { StoreProvider } from './StoreContext.tsx';
 import { loadWhileMounted } from './load.ts';
@@ -51,7 +52,14 @@ export function AppShell({ children, nav = true }: { children: ReactNode; nav?: 
         )}
       </header>
       <main className="flex-1">{children}</main>
-      <footer className="py-8 text-sm text-ink-muted">Your bank data stays on this device.</footer>
+      <footer className="flex flex-wrap justify-between gap-x-6 gap-y-2 py-8 text-sm text-ink-muted">
+        <span>Your bank data stays on this device.</span>
+        {nav && (
+          <a href={hrefFor('welcome')} className="underline hover:text-ink">
+            About Spendio
+          </a>
+        )}
+      </footer>
     </div>
   );
 }
@@ -68,7 +76,7 @@ function StorageUnavailable({ message }: { message: string }) {
   );
 }
 
-/** Sends a first-time visitor (no transactions yet) to "Add statement" instead of an empty overview. */
+/** Sends a first-time visitor (no transactions yet) to the landing page instead of an empty overview. */
 function useFirstVisitRedirect(): boolean {
   const store = useStore();
   const [checked, setChecked] = useState(false);
@@ -77,7 +85,7 @@ function useFirstVisitRedirect(): boolean {
       loadWhileMounted(
         () => store.countTransactions(),
         (count) => {
-          if (count === 0 && window.location.hash === '') navigate('add');
+          if (count === 0 && window.location.hash === '') navigate('welcome');
           setChecked(true);
         },
       ),
@@ -90,7 +98,8 @@ function Pages() {
   const route = useRoute();
   if (!useFirstVisitRedirect()) return <AppShell>{null}</AppShell>;
   return (
-    <AppShell>
+    <AppShell nav={route !== 'welcome'}>
+      {route === 'welcome' && <WelcomePage />}
       {route === 'overview' && <OverviewPage />}
       {route === 'add' && <AddStatementPage key="add" />}
       {route === 'review' && <ReviewPage />}
