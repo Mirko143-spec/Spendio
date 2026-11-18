@@ -12,15 +12,15 @@ export function HistoryTable({ model }: { model: HistoryModel }) {
     <div>
       <p className="mb-2 text-xs text-ink-muted sm:hidden">Scroll sideways for more months.</p>
       <div className="overflow-x-auto">
-        <table className="w-full border-collapse text-sm">
+        <table className="w-full border-separate border-spacing-0 text-sm">
           <caption className="sr-only">Spending per category and month, compared with each month’s limit</caption>
           <thead>
-            <tr className="border-b border-line">
-              <th scope="col" className="sticky left-0 bg-surface py-2 pr-4 text-left font-normal text-ink-muted">
+            <tr>
+              <th scope="col" className="sticky left-0 border-b border-line bg-surface py-2 pr-4 text-left font-normal text-ink-muted">
                 Category
               </th>
               {model.periods.map((p) => (
-                <th key={p.label} scope="col" className="px-3 py-2 text-right font-semibold whitespace-nowrap">
+                <th key={p.label} scope="col" className="border-b border-line px-3 py-2 text-right font-semibold whitespace-nowrap">
                   <abbr title={`${periodName(p.label)}: ${dateRange(p.start, p.end)}`} className="no-underline">
                     {periodName(p.label, true)}
                   </abbr>
@@ -43,8 +43,8 @@ export function HistoryTable({ model }: { model: HistoryModel }) {
 function Row({ row }: { row: HistoryRow }) {
   const name = row.category?.name ?? 'All spending';
   return (
-    <tr className="border-b border-line">
-      <th scope="row" className="sticky left-0 z-10 bg-surface py-3 pr-4 text-left align-top font-medium">
+    <tr>
+      <th scope="row" className="sticky left-0 z-10 border-b border-line bg-surface py-3 pr-4 text-left align-top font-medium">
         <span className="flex items-center gap-2">
           {row.category && (
             <span aria-hidden="true" className="size-2.5 shrink-0 rounded-full" style={{ backgroundColor: row.category.color }} />
@@ -70,7 +70,7 @@ function Cell({ cell, categoryId }: { cell: HistoryCell; categoryId: string | nu
   const over = cell.progress?.status === 'over';
   const href = hrefFor('transactions', { category: categoryId, period: cell.label });
   return (
-    <td className={`px-3 py-3 text-right align-top whitespace-nowrap ${over ? 'bg-danger/10' : ''}`}>
+    <td className={`border-b border-line px-3 py-3 text-right align-top whitespace-nowrap ${over ? 'bg-danger/10' : ''}`}>
       {cell.spent === 0 ? (
         <span className="text-ink-muted">–</span>
       ) : (
