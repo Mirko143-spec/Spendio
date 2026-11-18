@@ -17,6 +17,9 @@
   --danger: #b3263e; /* lingon */
   /* Data marks (bars, meters): pine family, validated by the dataviz palette checks (OKLCH L/C, contrast). */
   --chart-mark: #008362;
+  /* Below-zero marks (diverging pair with --chart-mark): lingon re-stepped in lightness so the pair
+     passes the colorblind (CVD) check — plain green vs red failed it. */
+  --chart-negative: #f28881;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -30,6 +33,7 @@
     --accent-ink: #0e1a17;
     --danger: #f07a8a;
     --chart-mark: #339e7c;
+    --chart-negative: #b54a46;
   }
 }
 
@@ -45,6 +49,7 @@
   --color-accent-ink: var(--accent-ink);
   --color-danger: var(--danger);
   --color-chart-mark: var(--chart-mark);
+  --color-chart-negative: var(--chart-negative);
 
   /* Type scale (classic 12 · 14 · 16 · 18 · 21 · 24 · 36). */
   --text-sm: 0.875rem;
