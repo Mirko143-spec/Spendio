@@ -34,7 +34,7 @@ Spendio is a budgeting web app. You upload a bank statement CSV; Spendio automat
 - JSON backup export/import, wipe all data
 - Responsive (phone width), light/dark mode following system
 
-### v1.1
+### Next (passcode encryption)
 - Optional passcode: encrypts all stored data (Web Crypto, PBKDF2 → AES-GCM), unlock screen, auto-lock, change passcode
 - Encrypted backups using the same passcode
 
@@ -267,7 +267,7 @@ Clicking a category anywhere (chart bars, budget rows) → Transactions filtered
   - *Imports*: past imports by bank and date with what they added; "Undo" (inline confirmation) removes the import's transactions, including categories chosen for them, while rules stay.
   - *File layouts*: layouts set up with the mapper (bank name, date set up) with "Forget" behind an inline confirmation; imported transactions stay, and the next file with that layout opens the mapper again.
   - *Delete all data*: two-step inline confirmation stating it can't be undone and pointing to the backup; afterwards the app starts over on "Add statement".
-  - (v1.1) passcode.
+  - (Next) passcode.
   - No browser dialogs anywhere; hidden file inputs show their keyboard focus on their visible label.
 
 ### Visual design
@@ -346,7 +346,7 @@ src/
     savings.ts         left over, savings rate and money moved per period, with window totals
     names.ts           tidy person names for display
     account.ts, settings.ts, backup.ts
-  storage/           the ONLY module that touches IndexedDB (Dexie); encryption is added here in v1.1
+  storage/           the ONLY module that touches IndexedDB (Dexie); passcode encryption (next) is added here
     db.ts              schema (v2: adds Swish from people to older databases) + first-run defaults
     store.ts           SpendioStore: the API the UI uses (atomic import, edits, rules, budgets, backup)
   ui/                React components (Amount, PeriodSwitcher, Headlines, BudgetList, SpendingChart, TransactionFilters, TransactionList, HistoryTable, ColumnChart, PeriodWindow (+ period-window.ts), CategoryEditor, CategoryLimit, DeleteCategory, RulesList, LimitForm, PeriodSettingsForm, BackupSection, ImportsSection, FileLayoutsSection, DeleteAllData, CsvMapper, download.ts, UploadScreen, ImportSummary, ReviewScreen, format.ts)
@@ -378,7 +378,7 @@ v1: unencrypted, with an on-screen warning that it contains bank data. Import va
 - Other headers: `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`, `Permissions-Policy: camera=(), microphone=(), geolocation=()`, `Cross-Origin-Opener-Policy: same-origin`.
 - All CSV content is untrusted: rendered only as text (React escaping, no `dangerouslySetInnerHTML`).
 - Personnummer scrubbing (§4.3). Real statements are never committed: `.gitignore` blocks `*.csv` outside `fixtures/`.
-- HTTPS is required in production (Web Crypto needs a secure context for v1.1). It's handled by the hosting proxy, not the container.
+- HTTPS is required in production (Web Crypto needs a secure context for the upcoming passcode encryption). It's handled by the hosting proxy, not the container.
 
 ## 16. Deployment
 
