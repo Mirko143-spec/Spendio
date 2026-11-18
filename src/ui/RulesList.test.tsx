@@ -92,3 +92,14 @@ describe('RulesList with a deleted category', () => {
     expect(screen.queryByText(/RYANAIR/)).not.toBeInTheDocument();
   });
 });
+
+describe('RulesList built-in names', () => {
+  it('shows each merchant name once, even when it has several match variants', async () => {
+    const user = userEvent.setup();
+    setup();
+    await user.click(screen.getByText(/^Built-in rules for Sweden/));
+    const restaurants = screen.getByRole('heading', { name: 'Restaurants & Cafés' }).nextElementSibling!.textContent!;
+    expect(restaurants.split(', ').filter((n) => n === 'MAX')).toHaveLength(1);
+    expect(restaurants).not.toMatch(/ ,/);
+  });
+});

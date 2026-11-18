@@ -77,7 +77,7 @@ export function RulesList({ userRules, builtinRules, countryName, categories, on
             {groupByCategory(activeBuiltins).map(([categoryId, rules]) => (
               <div key={categoryId}>
                 <h3 className="font-medium">{byId.get(categoryId)?.name ?? categoryId}</h3>
-                <p className="mt-1 text-sm text-ink-muted">{rules.map((r) => r.value).join(', ')}</p>
+                <p className="mt-1 text-sm text-ink-muted">{[...new Set(rules.map((r) => r.value.trim()))].join(', ')}</p>
               </div>
             ))}
           </div>
