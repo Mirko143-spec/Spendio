@@ -138,6 +138,7 @@ export function CsvMapper({ text, onSave, onCancel, newId, now }: CsvMapperProps
 
       <section aria-label="The file" className="space-y-3">
         <h2 className="font-semibold">The file</h2>
+        <p className="text-xs text-ink-muted sm:hidden">Scroll sideways to see every column.</p>
         <div className="overflow-x-auto">
           <table className="w-full border-separate border-spacing-0 text-sm">
             <thead>

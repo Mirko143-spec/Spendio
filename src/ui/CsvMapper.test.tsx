@@ -102,3 +102,10 @@ describe('CsvMapper', () => {
     expect(onCancel).toHaveBeenCalled();
   });
 });
+
+describe('CsvMapper on small screens', () => {
+  it('tells phone users the file preview scrolls sideways', () => {
+    setup();
+    expect(screen.getByText('Scroll sideways to see every column.')).toHaveClass('sm:hidden');
+  });
+});
