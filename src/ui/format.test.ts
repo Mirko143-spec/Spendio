@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { amountParts, dateRange, describeRule, groupContext, groupTitle, listNames, periodName } from './format.ts';
+import { plain } from '../test-utils.ts';
 
 describe('amountParts', () => {
   it('splits sign, Swedish-formatted number and currency', () => {
-    const plain = (s: string) => s.replace(/[\u00A0\u202F]/g, ' ');
     const out = amountParts(-123456);
     expect([out.sign, plain(out.number), out.currency]).toEqual(['−', '1 234,56', 'kr']);
     expect(amountParts(12500).sign).toBe('+');

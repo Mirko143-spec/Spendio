@@ -4,9 +4,9 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { CATEGORY_IDS as C, DEFAULT_CATEGORIES } from '../core/categories.ts';
 import { CategoryLimit } from './CategoryLimit.tsx';
+import { plain } from '../test-utils.ts';
 
 const category = (id: string) => DEFAULT_CATEGORIES.find((c) => c.id === id)!;
-const plain = (s: string | null) => (s ?? '').replace(/[\u00A0\u202F]/g, ' ');
 
 describe('CategoryLimit', () => {
   it('sets a limit from the current period on', async () => {

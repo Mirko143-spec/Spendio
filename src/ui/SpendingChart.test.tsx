@@ -7,11 +7,11 @@ import { DEFAULT_CATEGORIES } from '../core/categories.ts';
 import { buildDashboard } from '../core/dashboard.ts';
 import { importCsv } from '../core/import.ts';
 import { SpendingChart } from './SpendingChart.tsx';
+import { plain } from '../test-utils.ts';
 
 const fixture = readFileSync(join(import.meta.dirname, '../../fixtures/nordea-sample.csv'), 'utf8');
 let seq = 0;
 const { transactions } = importCsv(fixture, { existingFingerprints: new Set(), now: '2026-12-29T10:00:00.000Z', newId: () => `id-${++seq}` });
-const plain = (s: string | null) => (s ?? '').replace(/[\u00A0\u202F]/g, ' ');
 const model = (label: string) => buildDashboard(transactions, DEFAULT_CATEGORIES, [], label);
 
 describe('SpendingChart', () => {
