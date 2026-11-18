@@ -240,7 +240,8 @@ A user's manual category on a single transaction (`categorySource = 'manual'`) i
 Clicking a category anywhere → Transactions filtered by that category and period.
 
 ### Other pages
-- **Upload** → import summary → **Review** (grouped by merchant, sorted by absolute total, category dropdown + "Remember" checkbox, "Skip, I'll do it later")
+- **Upload** (file picker + drag and drop; supported banks listed from the format registry; clear errors for unsupported, empty or oversized files) → **Import summary** (new / already imported / lines that couldn't be read, with line numbers) → **Review** (one group per merchant *and* kind, so "Swish to Anna" and "Swish from Anna" are separate decisions; sorted by absolute total; category dropdown pre-filled with any suggestion + "Remember" checkbox; "Skip for now"). Until the dashboard exists, the flow ends on a "Saved on this device" screen.
+- Person names (Swish counterparties) are tidied for display only: `DOE,JOHN` → "John Doe", all-caps names re-cased. Rules keep matching the original text.
 - **Transactions**: search, filter (period, category, kind, needs review), inline category edit
 - **History**: per budgeted category, month-by-month spending vs that month's limit
 - **Savings**: Left over, savings rate, Moved to savings, month-by-month chart
