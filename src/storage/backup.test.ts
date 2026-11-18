@@ -15,7 +15,7 @@ const NOW = '2026-12-29T10:00:00.000Z';
 
 /** A store with an import, a manual edit, a custom category, a rule, a budget and changed settings. */
 async function populate(store: SpendioStore): Promise<void> {
-  await store.importNordea(fixture, { now: NOW, newId });
+  await store.importCsv(fixture, { now: NOW, newId });
   const t = (await store.listTransactions())[0]!;
   await store.setTransactionCategory(t.id, C.entertainment);
   await store.addCategory({ name: 'Pets', color: '#123456' }, newId);

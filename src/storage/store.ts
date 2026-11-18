@@ -2,7 +2,7 @@ import { DEFAULT_ACCOUNT, type Account } from '../core/account.ts';
 import { setLimit, type Budget } from '../core/budgets.ts';
 import { createBackup, type Backup } from '../core/backup.ts';
 import { DEFAULT_CATEGORIES, type Category } from '../core/categories.ts';
-import { importNordeaCsv, type ImportBatch, type ImportResult, type Transaction } from '../core/import.ts';
+import { importCsv, type ImportBatch, type ImportResult, type Transaction } from '../core/import.ts';
 import type { Ore } from '../core/money.ts';
 import { payday, type PeriodLabel, type PeriodSettings } from '../core/periods.ts';
 import type { MatchOp, Rule } from '../core/rules.ts';
@@ -54,16 +54,17 @@ export class SpendioStore {
   // ── Imports ────────────────────────────────────────────────────────────────
 
   /**
-   * Imports a Nordea CSV: reads existing fingerprints and user rules, runs the pure import
-   * pipeline and saves the result, all in one IndexedDB transaction. Either everything is
-   * saved or nothing is. A batch with no new rows is reported but not stored.
+   * Imports a bank CSV in any supported format: reads existing fingerprints and user rules, runs
+   * the pure import pipeline and saves the result, all in one IndexedDB transaction. Either
+   * everything is saved or nothing is. A batch with no new rows is reported but not stored.
+   * Throws `UnsupportedFormatError` when no format recognizes the file.
    */
-  importNordea(text: string, context: ImportContext): Promise<ImportResult> {
+  importCsv(text: string, context: ImportContext): Promise<ImportResult> {
     const { db } = this;
     return db.transaction('rw', db.transactions, db.importBatches, db.rules, async () => {
       const existingFingerprints = new Set(await db.transactions.orderBy('fingerprint').keys()) as Set<string>;
       const userRules = await db.rules.toArray();
-      const result = importNordeaCsv(text, {
+      const result = importCsv(text, {
         accountId: context.accountId ?? DEFAULT_ACCOUNT.id,
         existingFingerprints,
         userRules,
