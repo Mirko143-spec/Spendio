@@ -279,21 +279,30 @@ Built-in rules ship in code (versioned), not in the database, so they can be imp
 
 ```
 src/
-  core/        pure TS, no React, no browser APIs, fully unit-tested
-    csv/         nordea.ts, generic.ts, detect.ts
-    scrub.ts     personnummer detection/redaction
-    describe.ts  Rubrik → kind, purchaseDate, merchant
-    money.ts     öre parsing/formatting
-    holidays.ts  Swedish banking days
-    periods.ts   payday periods
-    dedup.ts
-    rules.ts     builtin rules + matching engine
-    budgets.ts   limits, status
-    summary.ts   period aggregates (spent, income, left over, savings)
-  storage/     the ONLY module that touches IndexedDB (Dexie); encryption is added here in v1.1
-  ui/          React pages + components
-fixtures/      synthetic CSVs only (fake names, no personnummer)
-docker/        nginx.conf
+  core/              pure TS, no React, no browser APIs, fully unit-tested (enforced by ESLint)
+    csv/               types.ts, nordea.ts (preset), mapping.ts (generic mapper type; generic.ts in step 6)
+    money.ts           öre parsing/formatting
+    scrub.ts           personnummer detection/redaction
+    dates.ts           UTC calendar-date helpers
+    describe.ts        Rubrik → kind, purchaseDate, effectiveDate
+    merchant.ts        merchant cleanup, Swish business detection
+    holidays.ts        Swedish banking days
+    periods.ts         payday periods and labels
+    dedup.ts           import fingerprints
+    categories.ts      default + system categories
+    rules.ts           rule matching + priority
+    builtin-rules.ts   Swedish merchant rules
+    categorize.ts      rules → kind defaults → Needs review
+    budgets.ts         limits with effectiveFrom, status
+    summary.ts         period aggregates (spent, income, left over, savings, needs review)
+    import.ts          pure import pipeline, Transaction + ImportBatch types
+    account.ts, settings.ts, backup.ts
+  storage/           the ONLY module that touches IndexedDB (Dexie); encryption is added here in v1.1
+    db.ts              schema v1 + first-run defaults
+    store.ts           SpendioStore: the API the UI uses (atomic import, edits, rules, budgets, backup)
+  ui/                React pages + components
+fixtures/            synthetic CSVs only (fake names, no personnummer)
+docker/              nginx.conf, security-headers.conf
 Dockerfile, compose.yaml
 ```
 
