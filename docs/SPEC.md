@@ -53,7 +53,9 @@ Server-side storage, user accounts, AI, PDF parsing, multiple accounts per bank,
 
 ## 4. Data input
 
-### 4.1 Nordea CSV format (observed in a real export, 2026-11-16)
+Each bank's export is a **bank format** (`core/formats/`): an id, a display name, its country, and functions to `detect` the file (header only), `parse` it into rows, and `describe` its description text (§5). The import pipeline tries the registered formats in order and uses the first that matches; a file no format recognizes goes to the generic mapper (§4.2). Adding a bank means adding one format and registering it.
+
+### 4.1 Nordea (first bank format; observed in a real export, 2026-11-16)
 
 ```
 Bokföringsdag;Belopp;Avsändare;Mottagare;Namn;Rubrik;Saldo;Valuta;
@@ -72,7 +74,7 @@ Bokföringsdag;Belopp;Avsändare;Mottagare;Namn;Rubrik;Saldo;Valuta;
 | `Saldo` | Running balance after the transaction, used for dedup |
 | `Valuta` | `SEK` |
 | Order | Newest first |
-| Filename | Contains the personnummer → never stored; batches are labelled `Nordea · <import date>` |
+| Filename | Contains the personnummer → never stored; batches are labelled `<bank name> · <import date>` (here `Nordea · 2026-11-16`) |
 
 Detection: header row (after stripping the BOM) matches the Nordea column set.
 
