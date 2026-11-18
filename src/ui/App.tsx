@@ -5,6 +5,7 @@ import { HistoryPage } from './pages/HistoryPage.tsx';
 import { OverviewPage } from './pages/OverviewPage.tsx';
 import { ReviewPage } from './pages/ReviewPage.tsx';
 import { SavingsPage } from './pages/SavingsPage.tsx';
+import { SettingsPage } from './pages/SettingsPage.tsx';
 import { TransactionsPage } from './pages/TransactionsPage.tsx';
 import { hrefFor, navigate, useRoute, type Route } from './router.ts';
 import { StoreProvider } from './StoreContext.tsx';
@@ -20,6 +21,7 @@ const NAV: { route: Route; label: string }[] = [
   { route: 'savings', label: 'Savings' },
   { route: 'categories', label: 'Categories' },
   { route: 'add', label: 'Add statement' },
+  { route: 'settings', label: 'Settings' },
 ];
 
 /** Page frame: wordmark, navigation, one centered reading column, and the privacy promise. */
@@ -90,6 +92,7 @@ function Pages() {
       {route === 'history' && <HistoryPage />}
       {route === 'savings' && <SavingsPage />}
       {route === 'categories' && <CategoriesPage />}
+      {route === 'settings' && <SettingsPage />}
     </AppShell>
   );
 }
