@@ -2,11 +2,12 @@ import { useState } from 'react';
 import type { DashboardModel } from '../core/dashboard.ts';
 import { Amount } from './Amount.tsx';
 import { wholeAmount } from './format.ts';
+import { hrefFor } from './router.ts';
 
 /**
  * Spending by category as ranked horizontal bars (dataviz: part-to-whole, compare parts → one hue,
  * largest first, value at the tip, no legend for a single series). Plain HTML so every label is
- * real text; each row is focusable and shows its share on hover and focus.
+ * real text; each bar is a link to its transactions and shows its share on hover and focus.
  */
 export function SpendingChart({ model }: { model: DashboardModel }) {
   const [active, setActive] = useState<string | null>(null);
@@ -29,28 +30,29 @@ export function SpendingChart({ model }: { model: DashboardModel }) {
             const share = Math.round((row.spent / total) * 100);
             const isActive = active === row.category.id;
             return (
-              <li
-                key={row.category.id}
-                tabIndex={0}
-                aria-label={`${row.category.name}: ${wholeAmount(row.spent)}, ${share} % of spending`}
-                onPointerEnter={() => setActive(row.category.id)}
-                onPointerLeave={() => setActive(null)}
-                onFocus={() => setActive(row.category.id)}
-                onBlur={() => setActive(null)}
-                className="relative grid gap-1 rounded-md sm:grid-cols-[10rem_1fr] sm:items-center sm:gap-4"
-              >
-                <span className="text-sm" aria-hidden="true">
-                  {row.category.name}
-                </span>
-                <span className="flex items-center gap-2" aria-hidden="true">
-                  <span
-                    className={`h-3 rounded-r-[4px] bg-chart-mark transition-[filter] ${isActive ? 'brightness-110' : ''}`}
-                    data-ratio={row.spent / max}
-                    // Proportional to the largest bar, within the room left after the value label.
-                    style={{ width: `max(2px, calc((100% - 7rem) * ${row.spent / max}))` }}
-                  />
-                  <Amount ore={row.spent} tone="plain" size="inline" />
-                </span>
+              <li key={row.category.id} className="relative">
+                <a
+                  href={hrefFor('transactions', { category: row.category.id, period: model.summary.period.label })}
+                  aria-label={`${row.category.name}: ${wholeAmount(row.spent)}, ${share} % of spending. Show transactions`}
+                  onPointerEnter={() => setActive(row.category.id)}
+                  onPointerLeave={() => setActive(null)}
+                  onFocus={() => setActive(row.category.id)}
+                  onBlur={() => setActive(null)}
+                  className="grid gap-1 rounded-md sm:grid-cols-[10rem_1fr] sm:items-center sm:gap-4"
+                >
+                  <span className="text-sm" aria-hidden="true">
+                    {row.category.name}
+                  </span>
+                  <span className="flex items-center gap-2" aria-hidden="true">
+                    <span
+                      className={`h-3 rounded-r-[4px] bg-chart-mark transition-[filter] ${isActive ? 'brightness-110' : ''}`}
+                      data-ratio={row.spent / max}
+                      // Proportional to the largest bar, within the room left after the value label.
+                      style={{ width: `max(2px, calc((100% - 7rem) * ${row.spent / max}))` }}
+                    />
+                    <Amount ore={row.spent} tone="plain" size="inline" />
+                  </span>
+                </a>
                 {isActive && (
                   <span
                     role="tooltip"

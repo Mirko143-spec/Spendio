@@ -5,6 +5,7 @@ import type { CategoryRow, DashboardModel } from '../core/dashboard.ts';
 import { parseAmount, type Ore } from '../core/money.ts';
 import { Amount } from './Amount.tsx';
 import { periodName, wholeAmount } from './format.ts';
+import { hrefFor } from './router.ts';
 
 interface BudgetListProps {
   model: DashboardModel;
@@ -32,14 +33,18 @@ export function BudgetList({ model, categories, onSetLimit }: BudgetListProps) {
 
       <ul className="mt-6 divide-y divide-line border-y border-line">
         <LimitRow
-          name="All spending"
+          name={
+            <a href={hrefFor('transactions', { period: label })} className="font-medium hover:underline">
+              All spending
+            </a>
+          }
           spent={model.summary.netSpending}
           limit={model.overall.limit}
           progress={model.overall.progress}
           onSetLimit={(amount) => onSetLimit(null, amount)}
         />
         {model.budgeted.map((row) => (
-          <CategoryLimitRow key={row.category.id} row={row} onSetLimit={onSetLimit} />
+          <CategoryLimitRow key={row.category.id} row={row} period={label} onSetLimit={onSetLimit} />
         ))}
       </ul>
       {model.budgeted.length === 0 && (
@@ -62,14 +67,20 @@ function CategoryName({ category }: { category: Category }) {
 
 function CategoryLimitRow({
   row,
+  period,
   onSetLimit,
 }: {
   row: CategoryRow;
+  period: string;
   onSetLimit: BudgetListProps['onSetLimit'];
 }) {
   return (
     <LimitRow
-      name={<CategoryName category={row.category} />}
+      name={
+        <a href={hrefFor('transactions', { category: row.category.id, period })} className="hover:underline">
+          <CategoryName category={row.category} />
+        </a>
+      }
       spent={row.spent}
       limit={row.limit}
       progress={row.progress}
