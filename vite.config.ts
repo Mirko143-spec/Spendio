@@ -13,5 +13,6 @@ export default defineConfig({
   test: {
     include: ['src/**/*.test.ts', 'fixtures/**/*.test.ts'],
     environment: 'node',
+    setupFiles: ['src/storage/test-setup.ts'],
   },
 });

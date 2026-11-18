@@ -1,0 +1,52 @@
+import Dexie, { type EntityTable } from 'dexie';
+import { DEFAULT_ACCOUNT, type Account } from '../core/account.ts';
+import type { Budget } from '../core/budgets.ts';
+import { DEFAULT_CATEGORIES, type Category } from '../core/categories.ts';
+import type { CsvMapping } from '../core/csv/mapping.ts';
+import type { ImportBatch, Transaction } from '../core/import.ts';
+import type { Rule } from '../core/rules.ts';
+import { DEFAULT_SETTINGS, type AppSettings } from '../core/settings.ts';
+
+/**
+ * IndexedDB schema (docs/SPEC.md §13–14). This folder is the only code that touches browser
+ * storage; passcode encryption (v1.1) will be added here without changing callers.
+ */
+
+export interface SettingsRow extends AppSettings {
+  key: 'app';
+}
+
+export const DEFAULT_DB_NAME = 'spendio';
+
+export class SpendioDB extends Dexie {
+  accounts!: EntityTable<Account, 'id'>;
+  importBatches!: EntityTable<ImportBatch, 'id'>;
+  transactions!: EntityTable<Transaction, 'id'>;
+  categories!: EntityTable<Category, 'id'>;
+  rules!: EntityTable<Rule, 'id'>;
+  budgets!: EntityTable<Budget, 'id'>;
+  csvMappings!: EntityTable<CsvMapping, 'id'>;
+  settings!: EntityTable<SettingsRow, 'key'>;
+
+  constructor(name: string = DEFAULT_DB_NAME) {
+    super(name);
+    this.version(1).stores({
+      accounts: 'id',
+      importBatches: 'id, accountId, importedAt',
+      // Unique fingerprints are a last line of defense against double imports.
+      transactions: 'id, accountId, importBatchId, &fingerprint, effectiveDate, categoryId, merchantKey',
+      categories: 'id',
+      rules: 'id, categoryId',
+      budgets: 'id, categoryId, effectiveFrom',
+      csvMappings: 'id, &headerSignature',
+      settings: 'key',
+    });
+
+    // Runs once, when the database is first created.
+    this.on('populate', (tx) => {
+      void tx.table('accounts').add(DEFAULT_ACCOUNT);
+      void tx.table('categories').bulkAdd([...DEFAULT_CATEGORIES]);
+      void tx.table('settings').add({ key: 'app', ...DEFAULT_SETTINGS } satisfies SettingsRow);
+    });
+  }
+}
