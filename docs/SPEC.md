@@ -128,11 +128,11 @@ Each category has a `type`:
 - `income`: system category **Income**, cannot be deleted
 - `transfer`: system category **Transfer**, with `transferKind`: `savings` or `internal`; cannot be deleted. Never counts as spending or income.
 
-**Default spending categories:** Groceries · Restaurants & Cafés · Transport · Shopping · Subscriptions · Gaming · Entertainment · Health & Fitness · Housing & Bills · Travel · Swish to people · Other
+**Default spending categories:** Groceries · Restaurants & Cafés · Transport · Shopping · Subscriptions · Gaming · Entertainment · Health & Fitness · Housing & Bills · Travel · Swish to people · Swish from people · Other
 
 **System:** Income · Transfer: Savings · Transfer: Internal
 
-**Default income category:** Swish from people (type `income`, editable, mirrors "Swish to people"). Money from people counts as income and never makes spending look smaller; a friend paying back a shared bill can instead be put in that spending category, which offsets it (see "Money back" below). Added to existing databases by the schema v2 upgrade.
+**Swish from people** is the mirror of "Swish to people": money back from people (split bills, someone paying you back). It is a spending category whose total is usually negative, so it **lowers total spending instead of inflating income**: pay 900 kr for dinner, get 450 kr back → Spent 450 kr. The dinner still shows in full under its own category, with the repayment as a separate "money back" line. Gifts from people belong in Income. Added to existing databases by the schema v2 upgrade. (Later: link a repayment to the purchase it pays back, so it offsets that exact category.)
 
 **Needs review** is not a category: it's `categoryId = null`.
 
