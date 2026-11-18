@@ -285,19 +285,23 @@ Built-in rules ship in code (versioned), not in the database, so they can be imp
 ```
 src/
   core/              pure TS, no React, no browser APIs, fully unit-tested (enforced by ESLint)
-    csv/               types.ts, nordea.ts (preset), mapping.ts (generic mapper type; generic.ts in step 6)
-    money.ts           öre parsing/formatting
-    scrub.ts           personnummer detection/redaction
+    formats/           bank formats; bank-neutral code reaches them only via index.ts
+      types.ts           BankFormat interface, TransactionKind, Described
+      index.ts           registry (BANK_FORMATS) + detectFormat
+      nordea/            parse.ts (CSV), describe.ts (Rubrik → kind, dates), index.ts (NORDEA)
+    country/           country specifics; bank-neutral code reaches them only via index.ts
+      types.ts           Country interface
+      index.ts           registry (COUNTRIES), DEFAULT_COUNTRY, countryFor
+      se/                Sweden: holidays.ts, personnummer.ts, builtin-rules.ts, business.ts, index.ts (SWEDEN)
+    csv/               types.ts (ParsedRow, ParseResult), mapping.ts (generic mapper type; generic.ts in step 6)
+    money.ts           amount parsing (minor units) + formatting in the country's currency
     dates.ts           UTC calendar-date helpers
-    describe.ts        Rubrik → kind, purchaseDate, effectiveDate
-    merchant.ts        merchant cleanup, Swish business detection
-    holidays.ts        Swedish banking days
-    periods.ts         payday periods and labels
+    merchant.ts        merchant name cleanup
+    periods.ts         payday periods and labels (banking days from the country)
     dedup.ts           import fingerprints
     categories.ts      default + system categories
     rules.ts           rule matching + priority
-    builtin-rules.ts   Swedish merchant rules
-    categorize.ts      rules → kind defaults → Needs review
+    categorize.ts      user rules → country rules → kind defaults → Needs review
     budgets.ts         limits with effectiveFrom, status
     summary.ts         period aggregates (spent, income, left over, savings, needs review)
     import.ts          pure import pipeline, Transaction + ImportBatch types
