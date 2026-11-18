@@ -254,7 +254,13 @@ Clicking a category anywhere (chart bars, budget rows) → Transactions filtered
 - **Categories & Rules** (`#/categories`):
   - *Categories*: spending and "not spending" (income, transfers) listed separately, each with its color (native color picker), name, transaction count and "built in" for system categories. Inline rename (duplicate names rejected with a message), a monthly limit from the current period on (spending categories only), and delete for non-system categories. Delete opens an inline confirmation (no browser dialog) that says what moves where ("Move its 3 transactions and 1 rule to [Other]") and that limits are removed. A form adds a new spending category.
   - *Rules*: your rules, newest first, in plain language ("Merchant is exactly TEBEX.ORG, Swish received only"), each with a category picker (updates the rule; affects future imports) and Delete. Built-in rules for the country are read-only, grouped by category behind a disclosure, each merchant name shown once; rules for deleted categories are hidden.
-- **Settings**: period start day, export/import backup, wipe all data, (v1.1) passcode
+- **Settings** (`#/settings`), in this order:
+  - *Budget month*: start day 1–28 ("1 (calendar months)") and "move to the previous banking day", with a live preview ("This month would be December 2026: 25 Nov – 22 Dec").
+  - *Backup*: "Download backup" saves `spendio-backup-YYYY-MM-DD.json` locally, with a note that it contains unencrypted bank data. "Restore from a backup file" validates the whole file first (invalid files are rejected with the reason, without asking), then shows what it contains and replaces everything only after "Replace my data".
+  - *Imports*: past imports by bank and date with what they added; "Undo" (inline confirmation) removes the import's transactions, including categories chosen for them, while rules stay.
+  - *Delete all data*: two-step inline confirmation stating it can't be undone and pointing to the backup; afterwards the app starts over on "Add statement".
+  - (v1.1) passcode.
+  - No browser dialogs anywhere; hidden file inputs show their keyboard focus on their visible label.
 
 ### Visual design
 - **Idea:** a bank export is a cramped wall of semicolons; Spendio is calm, airy and precise. The memorable element is the **amounts**: large tabular figures in Swedish format, currency lighter, right-aligned like a ledger. Everything else stays quiet.
