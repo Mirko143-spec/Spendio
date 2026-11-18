@@ -327,14 +327,15 @@ src/
     period-nav.ts      which periods to offer and which to open on
     transaction-filter.ts  period / category / type / search filtering, newest first
     category-usage.ts  what depends on each category (for delete)
+    history.ts         month-by-month spending vs each month's limit
     names.ts           tidy person names for display
     account.ts, settings.ts, backup.ts
   storage/           the ONLY module that touches IndexedDB (Dexie); encryption is added here in v1.1
     db.ts              schema (v2: adds Swish from people to older databases) + first-run defaults
     store.ts           SpendioStore: the API the UI uses (atomic import, edits, rules, budgets, backup)
-  ui/                React components (Amount, PeriodSwitcher, Headlines, BudgetList, SpendingChart, TransactionFilters, TransactionList, CategoryEditor, CategoryLimit, DeleteCategory, RulesList, LimitForm, UploadScreen, ImportSummary, ReviewScreen, format.ts)
-    App.tsx            shell + navigation; hash routes #/, #/transactions, #/categories, #/add, #/review with query params for page state (router.ts, no router library)
-    pages/             OverviewPage, TransactionsPage, CategoriesPage, AddStatementPage, ReviewPage
+  ui/                React components (Amount, PeriodSwitcher, Headlines, BudgetList, SpendingChart, TransactionFilters, TransactionList, HistoryTable, CategoryEditor, CategoryLimit, DeleteCategory, RulesList, LimitForm, UploadScreen, ImportSummary, ReviewScreen, format.ts)
+    App.tsx            shell + navigation; hash routes #/, #/transactions, #/history, #/categories, #/add, #/review with query params for page state (router.ts, no router library)
+    pages/             OverviewPage, TransactionsPage, HistoryPage, CategoriesPage, AddStatementPage, ReviewPage
     StoreContext.tsx, useStore.ts   opens the store once and shares it
     dev/               dev-only previews (dropped from production builds)
 .claude/skills/      project skills: frontend-design, webapp-testing (Anthropic, Apache-2.0)
