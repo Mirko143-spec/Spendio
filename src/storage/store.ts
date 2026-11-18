@@ -1,11 +1,12 @@
 import { DEFAULT_ACCOUNT, type Account } from '../core/account.ts';
 import { setLimit, type Budget } from '../core/budgets.ts';
-import type { Category } from '../core/categories.ts';
+import { createBackup, type Backup } from '../core/backup.ts';
+import { DEFAULT_CATEGORIES, type Category } from '../core/categories.ts';
 import { importNordeaCsv, type ImportBatch, type ImportResult, type Transaction } from '../core/import.ts';
 import type { Ore } from '../core/money.ts';
 import { payday, type PeriodLabel, type PeriodSettings } from '../core/periods.ts';
 import type { MatchOp, Rule } from '../core/rules.ts';
-import { DEFAULT_SETTINGS, type AppSettings } from '../core/settings.ts';
+import { DEFAULT_SETTINGS, SCHEMA_VERSION, type AppSettings } from '../core/settings.ts';
 import { DEFAULT_DB_NAME, SpendioDB } from './db.ts';
 
 export interface ImportContext {
@@ -254,6 +255,59 @@ export class SpendioStore {
       payday(2026, 1, next); // validates startDay (throws RangeError if invalid)
       await db.settings.put({ key: 'app', ...next });
       return next;
+    });
+  }
+
+  // ── Backup ─────────────────────────────────────────────────────────────────
+
+  /** Everything the user has, as a backup object (see core/backup.ts for the file format). */
+  async exportBackup(exportedAt: string): Promise<Backup> {
+    const { db } = this;
+    return db.transaction('r', db.tables, async () =>
+      createBackup(
+        {
+          accounts: await db.accounts.toArray(),
+          importBatches: await db.importBatches.toArray(),
+          transactions: await db.transactions.toArray(),
+          categories: await db.categories.toArray(),
+          rules: await db.rules.toArray(),
+          budgets: await db.budgets.toArray(),
+          csvMappings: await db.csvMappings.toArray(),
+          settings: await this.getSettings(),
+        },
+        exportedAt,
+      ),
+    );
+  }
+
+  /**
+   * Replaces all data with a backup (validate it with `parseBackup` first). Runs in one
+   * transaction: if anything fails, the existing data is left untouched.
+   */
+  async restoreBackup(backup: Backup): Promise<void> {
+    const { db } = this;
+    const { data } = backup;
+    await db.transaction('rw', db.tables, async () => {
+      await Promise.all(db.tables.map((t) => t.clear()));
+      await db.accounts.bulkAdd(data.accounts);
+      await db.importBatches.bulkAdd(data.importBatches);
+      await db.transactions.bulkAdd(data.transactions);
+      await db.categories.bulkAdd(data.categories);
+      await db.rules.bulkAdd(data.rules);
+      await db.budgets.bulkAdd(data.budgets);
+      await db.csvMappings.bulkAdd(data.csvMappings);
+      await db.settings.add({ key: 'app', ...data.settings, schemaVersion: SCHEMA_VERSION });
+    });
+  }
+
+  /** Deletes all data and puts the defaults back, as on a fresh install. */
+  async wipeAll(): Promise<void> {
+    const { db } = this;
+    await db.transaction('rw', db.tables, async () => {
+      await Promise.all(db.tables.map((t) => t.clear()));
+      await db.accounts.add(DEFAULT_ACCOUNT);
+      await db.categories.bulkAdd([...DEFAULT_CATEGORIES]);
+      await db.settings.add({ key: 'app', ...DEFAULT_SETTINGS });
     });
   }
 
