@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import type { Account } from '../../core/account.ts';
 import { backupFileName, serializeBackup } from '../../core/backup.ts';
+import type { CsvMapping } from '../../core/csv/mapping.ts';
 import type { ImportBatch } from '../../core/import.ts';
 import type { AppSettings } from '../../core/settings.ts';
 import type { SpendioStore } from '../../storage/store.ts';
 import { BackupSection } from '../BackupSection.tsx';
 import { DeleteAllData } from '../DeleteAllData.tsx';
+import { FileLayoutsSection } from '../FileLayoutsSection.tsx';
 import { downloadText } from '../download.ts';
 import { ImportsSection } from '../ImportsSection.tsx';
 import { PeriodSettingsForm } from '../PeriodSettingsForm.tsx';
@@ -16,15 +18,17 @@ interface Data {
   settings: AppSettings;
   batches: ImportBatch[];
   accounts: Account[];
+  mappings: CsvMapping[];
 }
 
 async function fetchData(store: SpendioStore): Promise<Data> {
-  const [settings, batches, accounts] = await Promise.all([
+  const [settings, batches, accounts, mappings] = await Promise.all([
     store.getSettings(),
     store.listImportBatches(),
     store.listAccounts(),
+    store.listCsvMappings(),
   ]);
-  return { settings, batches, accounts };
+  return { settings, batches, accounts, mappings };
 }
 
 /** Budget month, backups, imports and deleting data (docs/SPEC.md §12 Settings). */
@@ -75,6 +79,14 @@ export function SettingsPage() {
         accounts={data.accounts}
         onUndo={async (id) => {
           await store.deleteImportBatch(id);
+          reload();
+        }}
+      />
+
+      <FileLayoutsSection
+        mappings={data.mappings}
+        onForget={async (id) => {
+          await store.deleteCsvMapping(id);
           reload();
         }}
       />

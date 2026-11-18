@@ -79,3 +79,31 @@ describe('parseBackup privacy', () => {
     expect(parseBackup(text).data.transactions[0]!.description).toBe('Swish [redacted]');
   });
 });
+
+describe('parseBackup CSV mappings', () => {
+  const mapping = {
+    id: 'm1',
+    headerSignature: 'datum,text,belopp',
+    name: 'Testbank',
+    delimiter: ',',
+    dateFormat: 'YYYY-MM-DD',
+    decimal: '.',
+    columns: { date: 0, description: [1], amount: 2 },
+    createdAt: '2026-11-18T00:00:00.000Z',
+  };
+
+  it('accepts a valid mapping', () => {
+    const text = backupText((j) => (j.data.csvMappings = [mapping]));
+    expect(parseBackup(text).data.csvMappings).toEqual([mapping]);
+  });
+
+  it.each<[string, Loose, RegExp]>([
+    ['a bad delimiter', { delimiter: ':' }, /invalid delimiter/],
+    ['an unknown date format', { dateFormat: 'D/M/YY' }, /invalid date format/],
+    ['no amount columns', { columns: { date: 0, description: [1] } }, /invalid columns/],
+    ['no description columns', { columns: { date: 0, description: [], amount: 2 } }, /invalid columns/],
+  ])('rejects %s', (_, change, message) => {
+    const text = backupText((j) => (j.data.csvMappings = [{ ...mapping, ...change }]));
+    expect(() => parseBackup(text)).toThrow(message);
+  });
+});

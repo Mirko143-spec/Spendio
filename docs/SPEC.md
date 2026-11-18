@@ -83,6 +83,13 @@ Nordea has changed its export format before. If an export doesn't match, fall ba
 ### 4.2 Generic CSV mapper
 For non-preset files: the user maps columns → `date`, `amount` (or `debit` + `credit`), `description`, optional `balance`, and picks the date format, decimal separator and delimiter (auto-detected where possible). The mapping is saved, keyed by the header row, so the next import of the same layout is one click.
 
+- **When:** an import no format recognizes opens the mapper if the file reads as a table (≥ 2 columns, ≥ 1 data row); anything else gets an error.
+- **Detection** (`core/csv/sniff.ts`): the delimiter that splits the first lines most consistently; the date column and format from values (day-first preferred when ambiguous, as in Sweden; month-first only when a day is over 12); decimals from how numbers end; money columns from values, with header hints for debit/credit/amount/balance; the description from header hints in priority order (text, rubrik, beskrivning, description, then meddelande/specifikation), else the longest text column. **A column whose values are mostly national ID numbers is never suggested.**
+- **Mapping** (`core/csv/mapping.ts`): `{ id, headerSignature, name, delimiter, dateFormat, decimal, columns: { date, amount | debit + credit, description[], balance? }, createdAt }`. Date formats: `YYYY-MM-DD`, `YYYY/MM/DD`, `YYYYMMDD`, `DD/MM/YYYY`, `DD.MM.YYYY`, `DD-MM-YYYY`, `MM/DD/YYYY`. One mapping per header layout; validated on backup restore.
+- **Parsing** (`core/csv/generic.ts`): same contract as presets — scrubbed text, signed öre (debits are money out whether written positive or negative), bad lines reported with line numbers.
+- **As a bank format** (`core/formats/generic.ts`): id `csv:<mapping id>`, named after the bank the person gave, country Sweden (v1). Descriptions are read bank-neutrally: leading date/reference tokens are stripped so merchant rules match, and a leading YYMMDD / YYYY-MM-DD that is a plausible purchase date (0–30 days before booking) becomes the effective date. Kind is `other` (bank-specific wording like Swish is only understood by presets).
+- Imports try the presets first, then saved mappings. Forgetting a mapping keeps already imported transactions.
+
 ### 4.3 Personnummer scrubbing
 - Nordea parser drops `Avsändare` and `Mottagare` entirely.
 - Defense in depth: every text field is scrubbed for personnummer patterns (`YYMMDD-XXXX`, `YYMMDD+XXXX`, `YYYYMMDD-XXXX`, and 10/12-digit runs that form a valid date + Luhn check) before it enters the model. Matches are replaced with `[redacted]`.
@@ -246,7 +253,7 @@ A user's manual category on a single transaction (`categorySource = 'manual'`) i
 Clicking a category anywhere (chart bars, budget rows) → Transactions filtered by that category and period; "All spending" → all transactions in the period.
 
 ### Other pages
-- **Upload** (file picker + drag and drop; supported banks listed from the format registry; clear errors for unsupported, empty or oversized files) → **Import summary** (new / already imported / lines that couldn't be read, with line numbers) → **Review** (one group per merchant *and* kind, so "Swish to Anna" and "Swish from Anna" are separate decisions; sorted by absolute total; category dropdown pre-filled with any suggestion + "Remember" checkbox; "Skip for now"). Until the dashboard exists, the flow ends on a "Saved on this device" screen.
+- **Upload** (file picker + drag and drop; preset banks listed from the format registry; clear errors for files that aren't a table, empty or oversized files) → **Set up this file's layout** only for a table no format recognizes (bank name first, the file's first rows, column pickers labelled with example values, one amount column or money out / money in, date/decimal/separator formats, a live preview of the first 5 rows as they will import and of lines that can't be read; "Save and import" enabled once named, complete and at least one row reads) → **Import summary** (new / already imported / lines that couldn't be read, with line numbers) → **Review** (one group per merchant *and* kind, so "Swish to Anna" and "Swish from Anna" are separate decisions; sorted by absolute total; category dropdown pre-filled with any suggestion + "Remember" checkbox; "Skip for now"). The flow then continues to the overview.
 - Person names (Swish counterparties) are tidied for display only: `DOE,JOHN` → "John Doe", all-caps names re-cased. Rules keep matching the original text.
 - **Transactions**: one row of filters — period (periods with data, newest first, or all), category (or Needs review), type, and search (merchant, tidied person name, bank text; all words must match) — kept in the URL (`#/transactions?period=…&category=…&kind=…&q=…`) so filtered views survive reloads and can be linked to. Newest first, 100 rows at a time ("Show more"). Each row: readable title, date and type, amount, and an inline category picker that asks "Only this one" or "All from <merchant>" (§7.5).
 - **History** (`#/history`): answers "do I keep going over?" as a table (rows: "All spending", then categories with limits — most often over first — then the rest by total; columns: 6 periods, oldest first). Each cell shows the net spent and, where a limit applied that month, "of 1 000 kr" or "over by 645 kr" (with a light warning tint as a second cue only). Each row with limits summarizes "Over in 1 of 3 months" / "Within the limit every month". Limits are looked up per period, so raising a limit never changes how earlier months are judged. Cells link to the matching transactions. "‹ Earlier / Later ›" move the window by 6 periods, never past the last period with data; the window is kept in the URL (`?end=YYYY-MM`). Categories with only money back are left out. On phones the category column stays put while months scroll sideways (with a hint).
@@ -258,6 +265,7 @@ Clicking a category anywhere (chart bars, budget rows) → Transactions filtered
   - *Budget month*: start day 1–28 ("1 (calendar months)") and "move to the previous banking day", with a live preview ("This month would be December 2026: 25 Nov – 22 Dec").
   - *Backup*: "Download backup" saves `spendio-backup-YYYY-MM-DD.json` locally, with a note that it contains unencrypted bank data. "Restore from a backup file" validates the whole file first (invalid files are rejected with the reason, without asking), then shows what it contains and replaces everything only after "Replace my data".
   - *Imports*: past imports by bank and date with what they added; "Undo" (inline confirmation) removes the import's transactions, including categories chosen for them, while rules stay.
+  - *File layouts*: layouts set up with the mapper (bank name, date set up) with "Forget" behind an inline confirmation; imported transactions stay, and the next file with that layout opens the mapper again.
   - *Delete all data*: two-step inline confirmation stating it can't be undone and pointing to the backup; afterwards the app starts over on "Add statement".
   - (v1.1) passcode.
   - No browser dialogs anywhere; hidden file inputs show their keyboard focus on their visible label.
@@ -312,11 +320,12 @@ src/
       types.ts           BankFormat interface, TransactionKind, Described
       index.ts           registry (BANK_FORMATS) + detectFormat
       nordea/            parse.ts (CSV), describe.ts (Rubrik → kind, dates), index.ts (NORDEA)
+      generic.ts         a saved CsvMapping as a BankFormat (bank-neutral description reading)
     country/           country specifics; bank-neutral code reaches them only via index.ts
       types.ts           Country interface
       index.ts           registry (COUNTRIES), DEFAULT_COUNTRY, countryFor
       se/                Sweden: holidays.ts, personnummer.ts, builtin-rules.ts, business.ts, index.ts (SWEDEN)
-    csv/               types.ts (ParsedRow, ParseResult), mapping.ts (generic mapper type; generic.ts in step 6)
+    csv/               types.ts (ParsedRow, ParseResult), mapping.ts (CsvMapping), date-formats.ts, sniff.ts (detect + guess), generic.ts (parse with a mapping)
     money.ts           amount parsing (minor units) + formatting in the country's currency
     dates.ts           UTC calendar-date helpers
     merchant.ts        merchant name cleanup
@@ -340,7 +349,7 @@ src/
   storage/           the ONLY module that touches IndexedDB (Dexie); encryption is added here in v1.1
     db.ts              schema (v2: adds Swish from people to older databases) + first-run defaults
     store.ts           SpendioStore: the API the UI uses (atomic import, edits, rules, budgets, backup)
-  ui/                React components (Amount, PeriodSwitcher, Headlines, BudgetList, SpendingChart, TransactionFilters, TransactionList, HistoryTable, ColumnChart, PeriodWindow (+ period-window.ts), CategoryEditor, CategoryLimit, DeleteCategory, RulesList, LimitForm, PeriodSettingsForm, BackupSection, ImportsSection, DeleteAllData, download.ts, UploadScreen, ImportSummary, ReviewScreen, format.ts)
+  ui/                React components (Amount, PeriodSwitcher, Headlines, BudgetList, SpendingChart, TransactionFilters, TransactionList, HistoryTable, ColumnChart, PeriodWindow (+ period-window.ts), CategoryEditor, CategoryLimit, DeleteCategory, RulesList, LimitForm, PeriodSettingsForm, BackupSection, ImportsSection, FileLayoutsSection, DeleteAllData, CsvMapper, download.ts, UploadScreen, ImportSummary, ReviewScreen, format.ts)
     App.tsx            shell + navigation; hash routes #/, #/transactions, #/history, #/savings, #/categories, #/add, #/settings, #/review with query params for page state (router.ts, no router library)
     pages/             OverviewPage, TransactionsPage, HistoryPage, SavingsPage, CategoriesPage, AddStatementPage, SettingsPage, ReviewPage
     StoreContext.tsx, useStore.ts   opens the store once and shares it

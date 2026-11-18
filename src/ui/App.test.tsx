@@ -74,9 +74,27 @@ describe('App', () => {
     expect(within(heading.closest('section')!).getByText('Already imported, skipped').nextElementSibling).toHaveTextContent('28');
   });
 
-  it('shows a clear error for files no bank format recognizes', async () => {
+  it('shows a clear error for files that are not a table at all', async () => {
     render(<App dbName={dbName()} />);
-    await upload('Date,Amount\n2026-11-01,-1.00');
-    expect(await screen.findByRole('alert')).toHaveTextContent('Spendio can’t read this file yet');
+    await upload('This is not a statement');
+    expect(await screen.findByRole('alert')).toHaveTextContent('This doesn’t look like a bank statement export');
+  });
+
+  it('sets up an unknown bank’s layout once, then imports that layout directly', async () => {
+    const generic = readFileSync(join(import.meta.dirname, '../../fixtures/generic-sample.csv'), 'utf8');
+    const user = userEvent.setup();
+    render(<App dbName={dbName()} />);
+
+    await upload(generic);
+    expect(await screen.findByRole('heading', { name: 'Set up this file’s layout' })).toBeInTheDocument();
+    await user.type(screen.getByLabelText('Which bank is this?'), 'Testbank');
+    await user.click(screen.getByRole('button', { name: 'Save and import' }));
+    expect(await screen.findByRole('heading', { name: 'Imported 9 transactions' })).toBeInTheDocument();
+    expect(screen.getByText('From your Testbank statement.')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /Review later|Done/ }));
+    await user.click(await screen.findByRole('link', { name: 'Add statement' }));
+    await upload(generic);
+    expect(await screen.findByRole('heading', { name: 'Nothing new in this file' })).toBeInTheDocument();
   });
 });
