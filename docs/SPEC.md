@@ -220,6 +220,7 @@ A user's manual category on a single transaction (`categorySource = 'manual'`) i
 - **Savings rate** = `leftOver / income` (hidden when income is 0).
 - **Moved to savings** = `−Σ amount` of `Transfer: Savings` transactions (money out to Lysa positive, money back from Lysa negative).
 - `Transfer: Internal` counts in neither.
+- **Needs review** transactions (no category, or a category that no longer exists) are left out of every total above and reported separately as a count plus money out and money in, so the UI can show how much is still uncategorized (e.g. "3 transactions, 105 kr out, not counted yet").
 
 ## 12. Screens
 
