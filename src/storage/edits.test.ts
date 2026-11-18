@@ -115,3 +115,15 @@ describe('importing after deleting a default category', () => {
     expect((await store.listTransactions())[0]).toMatchObject({ categoryId: null, categorySource: 'none' });
   });
 });
+
+describe('listCategories', () => {
+  it('lists categories alphabetically, including new ones and Swedish letters', async () => {
+    await using store = await freshStore();
+    await store.addCategory({ name: 'Älg & vilt', color: '#000000' }, newId);
+    await store.addCategory({ name: 'Bilar', color: '#000000' }, newId);
+    const names = (await store.listCategories()).map((c) => c.name);
+    expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b, 'sv')));
+    expect(names.indexOf('Bilar')).toBeLessThan(names.indexOf('Entertainment'));
+    expect(names.at(-1)).toBe('Älg & vilt');
+  });
+});

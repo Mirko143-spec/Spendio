@@ -42,8 +42,10 @@ export class SpendioStore {
     return this.db.accounts.toArray();
   }
 
-  listCategories(): Promise<Category[]> {
-    return this.db.categories.toArray();
+  /** Categories sorted by name (Swedish collation), so pickers and lists read alphabetically. */
+  async listCategories(): Promise<Category[]> {
+    const categories = await this.db.categories.toArray();
+    return categories.sort((a, b) => a.name.localeCompare(b.name, 'sv'));
   }
 
   async getSettings(): Promise<AppSettings> {
