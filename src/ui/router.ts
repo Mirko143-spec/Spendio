@@ -5,7 +5,7 @@ import { useMemo, useSyncExternalStore } from 'react';
  * Query parameters after the route (`#/transactions?period=2026-11&category=gaming`) hold page
  * state such as filters, so a filtered view can be bookmarked or linked to.
  */
-export type Route = 'overview' | 'add' | 'review' | 'transactions' | 'history' | 'savings' | 'categories';
+export type Route = 'overview' | 'add' | 'review' | 'transactions' | 'history' | 'savings' | 'categories' | 'settings';
 
 const PATHS: Record<Route, string> = {
   overview: '#/',
@@ -15,6 +15,7 @@ const PATHS: Record<Route, string> = {
   history: '#/history',
   savings: '#/savings',
   categories: '#/categories',
+  settings: '#/settings',
 };
 
 /** Fired when params are replaced in place (replaceState doesn't fire `hashchange`). */
