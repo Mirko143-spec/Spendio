@@ -2,6 +2,7 @@ import Dexie, { type EntityTable } from 'dexie';
 import { DEFAULT_ACCOUNT, type Account } from '../core/account.ts';
 import type { Budget } from '../core/budgets.ts';
 import { DEFAULT_CATEGORIES, type Category } from '../core/categories.ts';
+import type { CsvMapping } from '../core/csv/mapping.ts';
 import type { ImportBatch, Transaction } from '../core/import.ts';
 import type { Rule } from '../core/rules.ts';
 import { DEFAULT_SETTINGS, type AppSettings } from '../core/settings.ts';
@@ -10,14 +11,6 @@ import { DEFAULT_SETTINGS, type AppSettings } from '../core/settings.ts';
  * IndexedDB schema (docs/SPEC.md §13–14). This folder is the only code that touches browser
  * storage; passcode encryption (v1.1) will be added here without changing callers.
  */
-
-/** Saved column mapping for the generic CSV importer (step 6); stored as-is until then. */
-export interface CsvMapping {
-  id: string;
-  /** Header row the mapping applies to. */
-  headerSignature: string;
-  [field: string]: unknown;
-}
 
 export interface SettingsRow extends AppSettings {
   key: 'app';
