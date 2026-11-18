@@ -94,3 +94,12 @@ describe('TransactionList', () => {
     expect(screen.getByText('No transactions match these filters.')).toBeInTheDocument();
   });
 });
+
+describe('TransactionList details line', () => {
+  it('leaves out the type when it is just "other"', () => {
+    setup([all.find((t) => t.merchantKey === 'STUDIESTÖD')!]);
+    const row = screen.getByRole('listitem');
+    expect(within(row).getByText('23 Dec')).toBeInTheDocument();
+    expect(row.textContent).not.toContain('other');
+  });
+});

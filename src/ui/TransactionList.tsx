@@ -86,7 +86,8 @@ function TransactionRow({
             {title}
           </p>
           <p className="mt-0.5 text-sm text-ink-muted">
-            {dateRange(t.effectiveDate, t.effectiveDate)}, {KIND_LABEL_ONE[t.kind]}
+            {dateRange(t.effectiveDate, t.effectiveDate)}
+            {t.kind !== 'other' && `, ${KIND_LABEL_ONE[t.kind]}`}
             {t.suggested && t.categoryId && ', suggested category'}
           </p>
         </div>
