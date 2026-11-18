@@ -124,6 +124,18 @@ export function CsvMapper({ text, onSave, onCancel, newId, now }: CsvMapperProps
         </p>
       </div>
 
+      <section aria-label="Bank" className="space-y-3">
+        <Field id={`${id}-name`} label="Which bank is this?">
+          <input
+            id={`${id}-name`}
+            className={`${control} sm:max-w-64`}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="e.g. SEB"
+          />
+        </Field>
+      </section>
+
       <section aria-label="The file" className="space-y-3">
         <h2 className="font-semibold">The file</h2>
         <div className="overflow-x-auto">
@@ -252,18 +264,6 @@ export function CsvMapper({ text, onSave, onCancel, newId, now }: CsvMapperProps
             )}
           </>
         )}
-      </section>
-
-      <section aria-label="Bank" className="space-y-3">
-        <Field id={`${id}-name`} label="Which bank is this?">
-          <input
-            id={`${id}-name`}
-            className={`${control} sm:max-w-64`}
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="e.g. SEB"
-          />
-        </Field>
       </section>
 
       {error && (
