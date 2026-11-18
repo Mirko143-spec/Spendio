@@ -16,6 +16,8 @@ interface RulesListProps {
 export function RulesList({ userRules, builtinRules, countryName, categories, onChangeCategory, onDelete }: RulesListProps) {
   const byId = new Map(categories.map((c) => [c.id, c]));
   const newestFirst = [...userRules].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  // Built-in rules for a deleted category are not used, so they are not shown either.
+  const activeBuiltins = builtinRules.filter((r) => byId.has(r.categoryId));
 
   return (
     <div className="space-y-10">
@@ -65,14 +67,14 @@ export function RulesList({ userRules, builtinRules, countryName, categories, on
       <section aria-labelledby="builtin-rules-title">
         <details>
           <summary id="builtin-rules-title" className="cursor-pointer text-lg font-semibold">
-            Built-in rules for {countryName} ({builtinRules.length})
+            Built-in rules for {countryName} ({activeBuiltins.length})
           </summary>
           <p className="mt-2 max-w-prose text-sm text-ink-muted">
             Common shops and services Spendio recognizes on its own. They can’t be edited, but any rule of yours for the
             same merchant takes priority.
           </p>
           <div className="mt-4 space-y-4">
-            {groupByCategory(builtinRules).map(([categoryId, rules]) => (
+            {groupByCategory(activeBuiltins).map(([categoryId, rules]) => (
               <div key={categoryId}>
                 <h3 className="font-medium">{byId.get(categoryId)?.name ?? categoryId}</h3>
                 <p className="mt-1 text-sm text-ink-muted">{rules.map((r) => r.value).join(', ')}</p>

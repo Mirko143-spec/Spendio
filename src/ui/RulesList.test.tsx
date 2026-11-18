@@ -71,3 +71,24 @@ describe('RulesList', () => {
     expect(within(summary.closest('details')!).queryByRole('combobox')).not.toBeInTheDocument();
   });
 });
+
+describe('RulesList with a deleted category', () => {
+  it('hides built-in rules for categories that no longer exist', async () => {
+    const user = userEvent.setup();
+    const categories = DEFAULT_CATEGORIES.filter((c) => c.id !== C.travel);
+    render(
+      <RulesList
+        userRules={[]}
+        builtinRules={SWEDEN.builtinRules}
+        countryName="Sweden"
+        categories={categories}
+        onChangeCategory={vi.fn()}
+        onDelete={vi.fn()}
+      />,
+    );
+    const travelRules = SWEDEN.builtinRules.filter((r) => r.categoryId === C.travel).length;
+    await user.click(screen.getByText(`Built-in rules for Sweden (${SWEDEN.builtinRules.length - travelRules})`));
+    expect(screen.queryByRole('heading', { name: 'travel' })).not.toBeInTheDocument();
+    expect(screen.queryByText(/RYANAIR/)).not.toBeInTheDocument();
+  });
+});

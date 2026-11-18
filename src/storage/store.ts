@@ -62,12 +62,14 @@ export class SpendioStore {
    */
   importCsv(text: string, context: ImportContext): Promise<ImportResult> {
     const { db } = this;
-    return db.transaction('rw', db.transactions, db.importBatches, db.rules, db.accounts, async () => {
+    return db.transaction('rw', db.transactions, db.importBatches, db.rules, db.accounts, db.categories, async () => {
       const existingFingerprints = new Set(await db.transactions.orderBy('fingerprint').keys()) as Set<string>;
       const userRules = await db.rules.toArray();
+      const categoryIds = new Set(await db.categories.toCollection().primaryKeys());
       const result = importCsv(text, {
         existingFingerprints,
         userRules,
+        categoryIds,
         now: context.now,
         newId: context.newId,
       });

@@ -103,3 +103,15 @@ describe('deleteCategory', () => {
     expect((await store.listCategories()).map((c) => c.id)).toContain(C.gaming);
   });
 });
+
+describe('importing after deleting a default category', () => {
+  it('sends purchases for the deleted category to Needs review instead of a category that is gone', async () => {
+    await using store = await freshStore();
+    await store.deleteCategory(C.travel, C.other);
+    const csv =
+      '﻿Bokföringsdag;Belopp;Avsändare;Mottagare;Namn;Rubrik;Saldo;Valuta;\n' +
+      '2026/11/20;-1200,00;000000-0000;;;Kortköp 261119 SAS SCANDINAVIAN;100,00;SEK;';
+    await store.importCsv(csv, { now: '2026-11-20T10:00:00.000Z', newId });
+    expect((await store.listTransactions())[0]).toMatchObject({ categoryId: null, categorySource: 'none' });
+  });
+});
