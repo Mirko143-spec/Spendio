@@ -84,3 +84,14 @@ export function wholeAmount(ore: number): string {
     maximumFractionDigits: 0,
   }).format(Math.round(ore / 100));
 }
+
+/** Plain-language names for transaction kinds (filters, details). */
+export const KIND_LABELS: Record<ReviewGroup['kind'], string> = {
+  card: 'Card purchases',
+  swish_out: 'Swish payments sent',
+  swish_in: 'Swish payments received',
+  swish_refund: 'Swish refunds',
+  autogiro: 'Direct debits',
+  deposit: 'Deposits',
+  other: 'Other',
+};
