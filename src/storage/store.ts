@@ -1,6 +1,10 @@
 import { DEFAULT_ACCOUNT, type Account } from '../core/account.ts';
+import { setLimit, type Budget } from '../core/budgets.ts';
 import type { Category } from '../core/categories.ts';
 import { importNordeaCsv, type ImportBatch, type ImportResult, type Transaction } from '../core/import.ts';
+import type { Ore } from '../core/money.ts';
+import { payday, type PeriodLabel, type PeriodSettings } from '../core/periods.ts';
+import type { MatchOp, Rule } from '../core/rules.ts';
 import { DEFAULT_SETTINGS, type AppSettings } from '../core/settings.ts';
 import { DEFAULT_DB_NAME, SpendioDB } from './db.ts';
 
@@ -167,6 +171,89 @@ export class SpendioStore {
       await db.rules.where('categoryId').equals(id).modify({ categoryId: moveToId });
       await db.budgets.where('categoryId').equals(id).delete();
       await db.categories.delete(id);
+    });
+  }
+
+  // ── User rules ─────────────────────────────────────────────────────────────
+
+  listUserRules(): Promise<Rule[]> {
+    return this.db.rules.toArray();
+  }
+
+  /**
+   * Saves a user rule ("always categorize X as Y"). A rule with the same match (op, value and
+   * kind) is updated rather than duplicated.
+   */
+  async saveUserRule(
+    input: { op: MatchOp; value: string; kind?: Rule['kind']; categoryId: string },
+    context: { now: string; newId: () => string },
+  ): Promise<Rule> {
+    const { db } = this;
+    return db.transaction('rw', db.rules, db.categories, async () => {
+      const value = input.value.trim().replace(/\s+/g, ' ').toLocaleUpperCase('sv-SE');
+      if (!value) throw new Error('Rule value is required');
+      if (!(await db.categories.get(input.categoryId))) throw new Error(`Unknown category: ${input.categoryId}`);
+
+      const existing = (await db.rules.toArray()).find(
+        (r) => r.op === input.op && r.value === value && r.kind === input.kind,
+      );
+      const rule: Rule = {
+        id: existing?.id ?? context.newId(),
+        source: 'user',
+        op: input.op,
+        value,
+        ...(input.kind ? { kind: input.kind } : {}),
+        categoryId: input.categoryId,
+        createdAt: context.now,
+      };
+      await db.rules.put(rule);
+      return rule;
+    });
+  }
+
+  async deleteUserRule(id: string): Promise<void> {
+    await this.db.rules.delete(id);
+  }
+
+  // ── Budgets ────────────────────────────────────────────────────────────────
+
+  listBudgets(): Promise<Budget[]> {
+    return this.db.budgets.toArray();
+  }
+
+  /**
+   * Sets a monthly limit (null removes it) for a spending category, or the overall limit when
+   * `categoryId` is null, from `fromPeriod` on. Earlier periods keep their limits.
+   */
+  async setBudgetLimit(
+    categoryId: string | null,
+    amount: Ore | null,
+    fromPeriod: PeriodLabel,
+    newId: () => string,
+  ): Promise<void> {
+    const { db } = this;
+    await db.transaction('rw', db.budgets, db.categories, async () => {
+      if (categoryId !== null) {
+        const category = await db.categories.get(categoryId);
+        if (!category) throw new Error(`Unknown category: ${categoryId}`);
+        if (category.type !== 'spending') throw new Error(`"${category.name}" is not a spending category`);
+      }
+      const updated = setLimit(await db.budgets.toArray(), categoryId, amount, fromPeriod, newId);
+      const record = updated.find((b) => b.categoryId === categoryId && b.effectiveFrom === fromPeriod)!;
+      await db.budgets.put(record);
+    });
+  }
+
+  // ── Settings ───────────────────────────────────────────────────────────────
+
+  /** Updates period settings. Periods are derived, so nothing else needs to change. */
+  async savePeriodSettings(changes: Partial<PeriodSettings>): Promise<AppSettings> {
+    const { db } = this;
+    return db.transaction('rw', db.settings, async () => {
+      const next: AppSettings = { ...(await this.getSettings()), ...changes };
+      payday(2026, 1, next); // validates startDay (throws RangeError if invalid)
+      await db.settings.put({ key: 'app', ...next });
+      return next;
     });
   }
 
