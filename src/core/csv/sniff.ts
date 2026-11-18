@@ -47,9 +47,10 @@ function detectDelimiter(text: string): Delimiter {
   return best;
 }
 
-export function sniffCsv(text: string): CsvSample {
+/** Reads the file with `delimiter`, or detects it when not given. */
+export function sniffCsv(text: string, delimiter?: Delimiter): CsvSample {
   const clean = text.startsWith(BOM) ? text.slice(1) : text;
-  const delimiter = detectDelimiter(clean);
+  delimiter ??= detectDelimiter(clean);
   const [header = [], ...data] = parseRows(clean, delimiter);
   const width = header.length;
   const rows = data

@@ -79,3 +79,11 @@ describe('guessMapping and ID numbers', () => {
     expect(guessMapping(s).columns.description).toBeUndefined();
   });
 });
+
+describe('sniffCsv with a chosen delimiter', () => {
+  it('uses the delimiter it is given instead of detecting one', () => {
+    const s = sniffCsv('a;b,c\n1;2,3\n', ',');
+    expect(s.delimiter).toBe(',');
+    expect(s.header).toEqual(['a;b', 'c']);
+  });
+});
