@@ -255,6 +255,7 @@ Clicking a category anywhere → Transactions filtered by that category and peri
 - **Palette (from Swedish nature):** snow `#f7f9fa` background, granite `#22292f` text, pine `#1e5b4b` accent, lingon `#b3263e` only for warnings, lichen `#5b6a63` secondary text, frost `#dde3e1` dividers; a night-forest dark mode. Money in is pine with `+`; money out stays neutral (spending isn't an error). Every text/background pair meets WCAG AA.
 - **Type:** Hanken Grotesk only, self-hosted (the CSP blocks font CDNs); its default figures are tabular.
 - **Layout:** one left-aligned column (max 44rem), dividers only where they separate items, no card stacks, no all-caps labels. Responsive to 390 px, visible keyboard focus, reduced motion respected.
+- **Charts:** follow the dataviz method — form first (comparing parts → ranked bars, one hue), plain HTML so labels are real text, direct value labels, hover *and* focus tooltips, no legend for a single series. Data marks use `--chart-mark` (`#008362` light / `#339e7c` dark): the pine accent itself is too dark and gray for a mark, so this is the pine hue re-stepped to pass the palette validator (OKLCH lightness band, chroma ≥ 0.10, ≥ 3:1 vs surface) in both modes. Meter tracks are the same hue at 15 %.
 
 ## 13. Data model (TypeScript, core)
 
