@@ -5,6 +5,7 @@ import { DEFAULT_CATEGORIES, type Category } from '../core/categories.ts';
 import { importCsv, type ImportBatch, type ImportResult, type Transaction } from '../core/import.ts';
 import type { Ore } from '../core/money.ts';
 import { payday, type PeriodLabel, type PeriodSettings } from '../core/periods.ts';
+import type { ReviewDecision } from '../core/review.ts';
 import type { MatchOp, Rule } from '../core/rules.ts';
 import { DEFAULT_SETTINGS, SCHEMA_VERSION, type AppSettings } from '../core/settings.ts';
 import { DEFAULT_DB_NAME, SpendioDB } from './db.ts';
@@ -172,6 +173,49 @@ export class SpendioStore {
       await db.rules.where('categoryId').equals(id).modify({ categoryId: moveToId });
       await db.budgets.where('categoryId').equals(id).delete();
       await db.categories.delete(id);
+    });
+  }
+
+  // ── Review ─────────────────────────────────────────────────────────────────
+
+  /**
+   * Saves the post-import review in one transaction. A chosen category is stored as the user's
+   * own choice; with "remember" it also becomes a rule (limited to the Swish direction for
+   * Swish, so paying and being paid by someone stay separate). A cleared suggestion goes back
+   * to Needs review; untouched groups stay as they are.
+   */
+  async applyReviewDecisions(
+    decisions: readonly ReviewDecision[],
+    context: { now: string; newId: () => string },
+  ): Promise<{ categorized: number; rulesSaved: number }> {
+    const { db } = this;
+    return db.transaction('rw', db.transactions, db.rules, db.categories, async () => {
+      let categorized = 0;
+      let rulesSaved = 0;
+      for (const d of decisions) {
+        if (d.categoryId === null) {
+          await db.transactions
+            .where('id')
+            .anyOf(d.transactionIds)
+            .filter((t) => t.suggested)
+            .modify({ categoryId: null, categorySource: 'none', suggested: false });
+          continue;
+        }
+        if (!(await db.categories.get(d.categoryId))) throw new Error(`Unknown category: ${d.categoryId}`);
+        categorized += await db.transactions
+          .where('id')
+          .anyOf(d.transactionIds)
+          .modify({ categoryId: d.categoryId, categorySource: 'manual', suggested: false });
+        if (d.remember) {
+          const swish = d.kind === 'swish_out' || d.kind === 'swish_in' || d.kind === 'swish_refund';
+          await this.saveUserRule(
+            { op: 'equals', value: d.merchantKey, ...(swish ? { kind: d.kind } : {}), categoryId: d.categoryId },
+            context,
+          );
+          rulesSaved++;
+        }
+      }
+      return { categorized, rulesSaved };
     });
   }
 
