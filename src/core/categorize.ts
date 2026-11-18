@@ -1,7 +1,7 @@
-import { BUILTIN_RULES } from './builtin-rules.ts';
+import { BUILTIN_RULES } from './country/se/builtin-rules.ts';
 import { CATEGORY_IDS } from './categories.ts';
 import type { TransactionKind } from './formats/types.ts';
-import { looksLikeBusiness } from './merchant.ts';
+import { looksLikeBusiness } from './country/se/business.ts';
 import { findBestRule, type Rule } from './rules.ts';
 
 /**

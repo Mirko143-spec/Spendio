@@ -4,7 +4,7 @@ import { CATEGORY_IDS, type Category } from './categories.ts';
 import type { CsvMapping } from './csv/mapping.ts';
 import type { ImportBatch, Transaction } from './import.ts';
 import type { Rule } from './rules.ts';
-import { redactPersonnummer } from './scrub.ts';
+import { redactPersonnummer } from './country/se/personnummer.ts';
 import { SCHEMA_VERSION, type AppSettings } from './settings.ts';
 
 /**

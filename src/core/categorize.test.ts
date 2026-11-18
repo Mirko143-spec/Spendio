@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { BUILTIN_RULES } from './builtin-rules.ts';
+import { BUILTIN_RULES } from './country/se/builtin-rules.ts';
 import { CATEGORY_IDS as C, DEFAULT_CATEGORIES } from './categories.ts';
 import { categorize } from './categorize.ts';
 import { parseNordeaCsv } from './formats/nordea/parse.ts';

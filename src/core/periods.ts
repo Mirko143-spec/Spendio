@@ -1,5 +1,5 @@
 import { addDays, isoDate } from './dates.ts';
-import { lastBankingDayOnOrBefore } from './holidays.ts';
+import { lastBankingDayOnOrBefore } from './country/se/holidays.ts';
 
 /**
  * Budget periods that run from payday to payday (docs/SPEC.md §9).

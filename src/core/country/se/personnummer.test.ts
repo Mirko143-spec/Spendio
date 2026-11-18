@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { containsPersonnummer, luhnValid, REDACTED, redactPersonnummer } from './scrub.ts';
+import { containsPersonnummer, luhnValid, REDACTED, redactPersonnummer } from './personnummer.ts';
 
 // Test values only. 121212-1212 is Skatteverket's well-known test identity ("Tolvan Tolvansson").
 // Other valid-looking numbers are built with `withCheckDigit` so no real person's number is used.

@@ -1,6 +1,6 @@
 import Papa from 'papaparse';
 import { parseAmount } from '../../money.ts';
-import { redactPersonnummer } from '../../scrub.ts';
+import { redactPersonnummer } from '../../country/se/personnummer.ts';
 import type { ParsedRow, ParseResult, RowError } from '../../csv/types.ts';
 
 /**
