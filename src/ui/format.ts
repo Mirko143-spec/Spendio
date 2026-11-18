@@ -75,3 +75,12 @@ export function periodName(label: string, short = false): string {
   const date = new Date(`${label}-01T00:00:00Z`);
   return (short ? monthShort : monthLong).format(date);
 }
+
+/** Whole currency amount in the country's format, e.g. 1200000 öre → "12 000 kr". */
+export function wholeAmount(ore: number): string {
+  return new Intl.NumberFormat(DEFAULT_COUNTRY.locale, {
+    style: 'currency',
+    currency: DEFAULT_COUNTRY.currency,
+    maximumFractionDigits: 0,
+  }).format(Math.round(ore / 100));
+}
