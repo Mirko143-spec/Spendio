@@ -9,30 +9,33 @@ import { hrefFor } from './router.ts';
  */
 export function HistoryTable({ model }: { model: HistoryModel }) {
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full border-collapse text-sm">
-        <caption className="sr-only">Spending per category and month, compared with each month’s limit</caption>
-        <thead>
-          <tr className="border-b border-line">
-            <th scope="col" className="sticky left-0 bg-surface py-2 pr-4 text-left font-normal text-ink-muted">
-              Category
-            </th>
-            {model.periods.map((p) => (
-              <th key={p.label} scope="col" className="px-3 py-2 text-right font-semibold whitespace-nowrap">
-                <abbr title={`${periodName(p.label)}: ${dateRange(p.start, p.end)}`} className="no-underline">
-                  {periodName(p.label, true)}
-                </abbr>
-                {p.label.endsWith('-01') && <span className="block font-normal text-ink-muted">{p.label.slice(0, 4)}</span>}
+    <div>
+      <p className="mb-2 text-xs text-ink-muted sm:hidden">Scroll sideways for more months.</p>
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse text-sm">
+          <caption className="sr-only">Spending per category and month, compared with each month’s limit</caption>
+          <thead>
+            <tr className="border-b border-line">
+              <th scope="col" className="sticky left-0 bg-surface py-2 pr-4 text-left font-normal text-ink-muted">
+                Category
               </th>
+              {model.periods.map((p) => (
+                <th key={p.label} scope="col" className="px-3 py-2 text-right font-semibold whitespace-nowrap">
+                  <abbr title={`${periodName(p.label)}: ${dateRange(p.start, p.end)}`} className="no-underline">
+                    {periodName(p.label, true)}
+                  </abbr>
+                  {p.label.endsWith('-01') && <span className="block font-normal text-ink-muted">{p.label.slice(0, 4)}</span>}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {model.rows.map((row) => (
+              <Row key={row.category?.id ?? 'all'} row={row} />
             ))}
-          </tr>
-        </thead>
-        <tbody>
-          {model.rows.map((row) => (
-            <Row key={row.category?.id ?? 'all'} row={row} />
-          ))}
-        </tbody>
-      </table>
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

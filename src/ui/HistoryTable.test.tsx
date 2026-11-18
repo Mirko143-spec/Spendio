@@ -52,3 +52,10 @@ describe('HistoryTable', () => {
     expect(within(row('All spending')).getAllByRole('link')[0]).toHaveAttribute('href', '#/transactions?period=2026-10');
   });
 });
+
+describe('HistoryTable on small screens', () => {
+  it('tells phone users the table scrolls sideways (hidden from sm up)', () => {
+    setup();
+    expect(screen.getByText('Scroll sideways for more months.')).toHaveClass('sm:hidden');
+  });
+});
