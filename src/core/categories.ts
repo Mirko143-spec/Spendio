@@ -32,6 +32,7 @@ export const CATEGORY_IDS = {
   housing: 'housing',
   travel: 'travel',
   swishPeople: 'swish-people',
+  swishFromPeople: 'swish-from-people',
   other: 'other',
   income: 'income',
   savings: 'transfer-savings',
@@ -54,6 +55,9 @@ export const DEFAULT_CATEGORIES: readonly Category[] = [
   spending(CATEGORY_IDS.swishPeople, 'Swish to people', '#9333ea'),
   spending(CATEGORY_IDS.other, 'Other', '#78716c'),
   { id: CATEGORY_IDS.income, name: 'Income', color: '#15803d', type: 'income', system: true },
+  // Money from private persons (Swish). Income, so it never makes spending look smaller; a friend paying
+  // back a shared bill can still be put in that spending category instead, to offset it.
+  { id: CATEGORY_IDS.swishFromPeople, name: 'Swish from people', color: '#a855f7', type: 'income', system: false },
   { id: CATEGORY_IDS.savings, name: 'Transfer: Savings', color: '#0369a1', type: 'transfer', transferKind: 'savings', system: true },
   { id: CATEGORY_IDS.internal, name: 'Transfer: Internal', color: '#64748b', type: 'transfer', transferKind: 'internal', system: true },
 ];

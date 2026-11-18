@@ -45,3 +45,11 @@ describe('isSavingsTransfer', () => {
     expect(DEFAULT_CATEGORIES.filter(isSavingsTransfer).map((c) => c.id)).toEqual([CATEGORY_IDS.savings]);
   });
 });
+
+describe('Swish from people', () => {
+  it('is an editable income category that mirrors "Swish to people"', () => {
+    const from = DEFAULT_CATEGORIES.find((c) => c.id === CATEGORY_IDS.swishFromPeople);
+    expect(from).toMatchObject({ name: 'Swish from people', type: 'income', system: false });
+    expect(countsAsSpending(from!)).toBe(false);
+  });
+});
