@@ -132,6 +132,8 @@ Each category has a `type`:
 
 **System:** Income · Transfer: Savings · Transfer: Internal
 
+**Default income category:** Swish from people (type `income`, editable, mirrors "Swish to people"). Money from people counts as income and never makes spending look smaller; a friend paying back a shared bill can instead be put in that spending category, which offsets it (see "Money back" below). Added to existing databases by the schema v2 upgrade.
+
 **Needs review** is not a category: it's `categoryId = null`.
 
 ### Money back (refunds, repayments)
