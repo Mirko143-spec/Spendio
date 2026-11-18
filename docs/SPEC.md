@@ -145,7 +145,7 @@ A rule matches on `merchantKey` (optionally restricted by `kind`) with operator 
 3. **Built-in kind rules** (e.g. `Studiestöd` → Income)
 4. Otherwise → Needs review
 
-Within a tier, the most specific match wins: `equals` > `startsWith` > `contains`, then the longest pattern, then the newest rule.
+Within a tier, the most specific match wins: `equals` > `startsWith` > `contains`, then a rule restricted to the transaction's kind over an unrestricted one, then the longest pattern, then the newest rule (then rule id, so the result never depends on rule order).
 
 A user's manual category on a single transaction (`categorySource = 'manual'`) is never overwritten by rules, re-imports or rule changes.
 
@@ -220,6 +220,7 @@ A user's manual category on a single transaction (`categorySource = 'manual'`) i
 - **Savings rate** = `leftOver / income` (hidden when income is 0).
 - **Moved to savings** = `−Σ amount` of `Transfer: Savings` transactions (money out to Lysa positive, money back from Lysa negative).
 - `Transfer: Internal` counts in neither.
+- **Needs review** transactions (no category, or a category that no longer exists) are left out of every total above and reported separately as a count plus money out and money in, so the UI can show how much is still uncategorized (e.g. "3 transactions, 105 kr out, not counted yet").
 
 ## 12. Screens
 
@@ -248,7 +249,7 @@ type PeriodLabel = string;   // 'YYYY-MM'
 
 interface Account      { id: string; bank: 'nordea' | 'generic'; name: string }  // no account numbers
 interface ImportBatch  { id: string; accountId: string; label: string; importedAt: string;
-                         rowCount: number; newCount: number; duplicateCount: number }
+                         rowCount: number; newCount: number; duplicateCount: number; errorCount: number }
 interface Transaction  {
   id: string; accountId: string; importBatchId: string; fingerprint: string;
   bookingDate: string; purchaseDate?: string; effectiveDate: string;   // ISO dates

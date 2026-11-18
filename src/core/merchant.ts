@@ -16,9 +16,9 @@ export interface Merchant {
 const PROCESSOR_PREFIX = /^(?:NMB|WL|PAYPAL|SQ|SUMUP|IZ|ZETTLE|KLARNA)\s*[*_]+\s*/i;
 
 // Trailing tokens that are references, not part of the name:
-//   pure digits ("398", "188885825"), star codes ("*BB4SS7W"),
+//   pure digits ("398", "188885825"), star codes containing a digit ("*BB4SS7W", but not "*EATS"),
 //   and long letter+digit codes ("P4938CFA38"; short ones like "ST1" are real names).
-const NOISE_TOKEN = /^(?:\d+|\*\w+|(?=[A-Z0-9]*\d)(?=[A-Z0-9]*[A-Z])[A-Z0-9]{6,})$/i;
+const NOISE_TOKEN = /^(?:\d+|\*(?=\w*\d)\w+|(?=[A-Z0-9]*\d)(?=[A-Z0-9]*[A-Z])[A-Z0-9]{6,})$/i;
 
 export function cleanMerchant(counterparty: string): Merchant {
   let tokens = counterparty
