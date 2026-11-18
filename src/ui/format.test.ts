@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { amountParts, dateRange, groupContext, groupTitle, listNames } from './format.ts';
+import { amountParts, dateRange, groupContext, groupTitle, listNames, periodName } from './format.ts';
 
 describe('amountParts', () => {
   it('splits sign, Swedish-formatted number and currency', () => {
@@ -52,5 +52,12 @@ describe('listNames', () => {
     expect(listNames(['Nordea'])).toBe('Nordea');
     expect(listNames(['Nordea', 'SEB'])).toBe('Nordea and SEB');
     expect(listNames(['Nordea', 'SEB', 'Swedbank'])).toBe('Nordea, SEB and Swedbank');
+  });
+});
+
+describe('periodName', () => {
+  it('names a period label', () => {
+    expect(periodName('2026-11')).toBe('November 2026');
+    expect(periodName('2027-01', true)).toBe('Jan');
   });
 });
