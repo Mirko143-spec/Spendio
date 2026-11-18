@@ -15,6 +15,15 @@ npm run lint
 npm run build
 ```
 
+## Continuous integration
+
+GitHub Actions runs two workflows on every pull request and on `main`:
+
+- **Checks** (`.github/workflows/checks.yml`): typecheck, lint and test, as three parallel jobs.
+- **Build** (`.github/workflows/build.yml`): the app build and the Docker image (built, not pushed).
+
+Node's version comes from `.nvmrc`, the same major version the Dockerfile builds with.
+
 ## Run with Docker
 
 ```sh
