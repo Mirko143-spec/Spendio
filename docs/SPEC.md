@@ -384,6 +384,7 @@ v1: unencrypted, with an on-screen warning that it contains bank data. Import va
 ## 16. Deployment
 
 - **CI (GitHub Actions):** on every pull request and push to `main`, a **Checks** workflow (typecheck, lint, test — parallel jobs) and a **Build** workflow (`npm run build` and a `docker build` that is never pushed, so a broken Dockerfile or nginx config is caught before deploy). Node version from `.nvmrc`. Deploying stays with Woodpecker (below).
+- **Releases:** every version gets an annotated git tag and a GitHub release, using semantic versioning (`vMAJOR.MINOR.PATCH`: features bump the minor, fixes the patch). The tag goes on `main` after the version's PR is merged, and `package.json` carries the same version. v1.0.0 was the first complete version.
 - **Local:** `docker compose up` → `http://localhost:8080`.
 - **Image:** multi-stage. `node:22-alpine` builds `dist/` → `nginx:alpine` serves it on **port 80**, with `docker/nginx.conf` providing the security headers and SPA fallback (`try_files $uri /index.html`). Same pattern as the MiranDinc project.
 - **Production:** the author's brother's server (Woodpecker CI → registry → Helm on Kubernetes, Traefik TLS, Cloudflare tunnel). The **Woodpecker/deploy config will be written by the author together with their brother** and is not part of this spec.
