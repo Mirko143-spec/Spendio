@@ -10,6 +10,7 @@ import type { Ore } from '../core/money.ts';
 import { payday, type PeriodLabel, type PeriodSettings } from '../core/periods.ts';
 import type { TransactionKind } from '../core/formats/types.ts';
 import type { ReviewDecision } from '../core/review.ts';
+import { isSampleBatch, SAMPLE_DATA_LABEL } from '../core/sample.ts';
 import type { MatchOp, Rule } from '../core/rules.ts';
 import { DEFAULT_SETTINGS, SCHEMA_VERSION, type AppSettings } from '../core/settings.ts';
 import { DEFAULT_DB_NAME, SpendioDB } from './db.ts';
@@ -18,6 +19,8 @@ export interface ImportContext {
   /** ISO timestamp of the import. */
   now: string;
   newId: () => string;
+  /** Overrides the batch label (e.g. sample data). */
+  label?: string;
 }
 
 export interface DateRange {
@@ -81,6 +84,7 @@ export class SpendioStore {
         formats,
         now: context.now,
         newId: context.newId,
+        ...(context.label ? { label: context.label } : {}),
       });
       if (result.transactions.length > 0) {
         if (!(await db.accounts.get(result.account.id))) await db.accounts.add(result.account);
@@ -88,6 +92,21 @@ export class SpendioStore {
         await db.transactions.bulkAdd(result.transactions);
       }
       return result;
+    });
+  }
+
+  /** Imports the bundled sample statement, labelled so it can be told apart and removed. */
+  loadSampleData(text: string, context: Omit<ImportContext, 'label'>): Promise<ImportResult> {
+    return this.importCsv(text, { ...context, label: SAMPLE_DATA_LABEL });
+  }
+
+  /** Removes every sample-data import and its transactions. Returns how many transactions were removed. */
+  async removeSampleData(): Promise<number> {
+    const { db } = this;
+    return db.transaction('rw', db.transactions, db.importBatches, async () => {
+      let removed = 0;
+      for (const batch of (await db.importBatches.toArray()).filter(isSampleBatch)) removed += await this.deleteImportBatch(batch.id);
+      return removed;
     });
   }
 
