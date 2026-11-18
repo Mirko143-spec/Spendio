@@ -76,3 +76,15 @@ export function groupForReview(transactions: readonly Transaction[]): ReviewGrou
     (a, b) => Math.abs(b.total) - Math.abs(a.total) || a.merchantDisplay.localeCompare(b.merchantDisplay, 'sv'),
   );
 }
+
+/** What the user decided for one review group. */
+export interface ReviewDecision {
+  groupKey: string;
+  transactionIds: string[];
+  merchantKey: string;
+  kind: TransactionKind;
+  /** null = leave in Needs review. */
+  categoryId: string | null;
+  /** Also create a rule so future imports get this category automatically. */
+  remember: boolean;
+}

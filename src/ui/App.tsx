@@ -1,4 +1,7 @@
-import type { ReactNode } from 'react';
+import { lazy, Suspense, type ReactNode } from 'react';
+
+// Dev-only previews; `import.meta.env.DEV` is false in production builds, so they are dropped.
+const ReviewPreview = import.meta.env.DEV ? lazy(() => import('./dev/ReviewPreview.tsx')) : null;
 
 /** Page frame: wordmark, one centered reading column, and the privacy promise. */
 export function AppShell({ children }: { children: ReactNode }) {
@@ -15,6 +18,15 @@ export function AppShell({ children }: { children: ReactNode }) {
 }
 
 export function App() {
+  if (ReviewPreview && new URLSearchParams(window.location.search).get('preview') === 'review') {
+    return (
+      <AppShell>
+        <Suspense>
+          <ReviewPreview />
+        </Suspense>
+      </AppShell>
+    );
+  }
   return (
     <AppShell>
       <h1 className="text-title font-semibold tracking-[-0.015em]">See where your money goes</h1>

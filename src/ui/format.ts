@@ -1,0 +1,60 @@
+import { DEFAULT_COUNTRY } from '../core/country/index.ts';
+import type { ReviewGroup } from '../core/review.ts';
+
+/** Amount split for display: sign, number and currency, e.g. ["+", "1 500,00", "kr"]. */
+export function amountParts(ore: number): { sign: '+' | '−' | ''; number: string; currency: string } {
+  const formatter = new Intl.NumberFormat(DEFAULT_COUNTRY.locale, {
+    style: 'currency',
+    currency: DEFAULT_COUNTRY.currency,
+  });
+  const parts = formatter.formatToParts(Math.abs(ore) / 100);
+  const number = parts
+    .filter((p) => p.type !== 'currency' && p.type !== 'literal' && p.type !== 'minusSign')
+    .map((p) => p.value)
+    .join('');
+  const currency = parts.find((p) => p.type === 'currency')?.value ?? DEFAULT_COUNTRY.currency;
+  return { sign: ore > 0 ? '+' : ore < 0 ? '−' : '', number, currency };
+}
+
+const dayMonth = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' });
+const day = new Intl.DateTimeFormat('en-GB', { day: 'numeric', timeZone: 'UTC' });
+const toDate = (iso: string) => new Date(`${iso}T00:00:00Z`);
+
+/** "27 Oct", "3–10 Nov", "25 Oct – 9 Nov". */
+export function dateRange(first: string, last: string): string {
+  if (first === last) return dayMonth.format(toDate(first));
+  if (first.slice(0, 7) === last.slice(0, 7)) return `${day.format(toDate(first))}–${dayMonth.format(toDate(last))}`;
+  return `${dayMonth.format(toDate(first))} – ${dayMonth.format(toDate(last))}`;
+}
+
+/** How a review group is named for the person reading it. */
+export function groupTitle(group: Pick<ReviewGroup, 'kind' | 'merchantDisplay'>): string {
+  switch (group.kind) {
+    case 'swish_out':
+      return `Swish to ${group.merchantDisplay}`;
+    case 'swish_in':
+      return `Swish from ${group.merchantDisplay}`;
+    case 'swish_refund':
+      return `Swish refund from ${group.merchantDisplay}`;
+    case 'autogiro':
+      return `Direct debit to ${group.merchantDisplay}`;
+    default:
+      return group.merchantDisplay;
+  }
+}
+
+const NOUNS: Partial<Record<ReviewGroup['kind'], [string, string]>> = {
+  card: ['purchase', 'purchases'],
+  swish_out: ['payment', 'payments'],
+  swish_in: ['payment', 'payments'],
+  swish_refund: ['refund', 'refunds'],
+  autogiro: ['payment', 'payments'],
+  deposit: ['deposit', 'deposits'],
+};
+
+/** "6 purchases, 3–10 Nov" */
+export function groupContext(group: Pick<ReviewGroup, 'kind' | 'transactionIds' | 'firstDate' | 'lastDate'>): string {
+  const [one, many] = NOUNS[group.kind] ?? ['transaction', 'transactions'];
+  const n = group.transactionIds.length;
+  return `${n} ${n === 1 ? one : many}, ${dateRange(group.firstDate, group.lastDate)}`;
+}
