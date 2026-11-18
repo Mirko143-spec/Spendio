@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react';
 import { AddStatementPage } from './pages/AddStatementPage.tsx';
+import { CategoriesPage } from './pages/CategoriesPage.tsx';
 import { OverviewPage } from './pages/OverviewPage.tsx';
 import { ReviewPage } from './pages/ReviewPage.tsx';
 import { TransactionsPage } from './pages/TransactionsPage.tsx';
@@ -13,6 +14,7 @@ const ReviewPreview = import.meta.env.DEV ? lazy(() => import('./dev/ReviewPrevi
 const NAV: { route: Route; label: string }[] = [
   { route: 'overview', label: 'Overview' },
   { route: 'transactions', label: 'Transactions' },
+  { route: 'categories', label: 'Categories' },
   { route: 'add', label: 'Add statement' },
 ];
 
@@ -81,6 +83,7 @@ function Pages() {
       {route === 'add' && <AddStatementPage key="add" />}
       {route === 'review' && <ReviewPage />}
       {route === 'transactions' && <TransactionsPage />}
+      {route === 'categories' && <CategoriesPage />}
     </AppShell>
   );
 }
