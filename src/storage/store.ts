@@ -2,6 +2,9 @@ import type { Account } from '../core/account.ts';
 import { setLimit, type Budget } from '../core/budgets.ts';
 import { createBackup, type Backup } from '../core/backup.ts';
 import { DEFAULT_CATEGORIES, type Category } from '../core/categories.ts';
+import { BANK_FORMATS } from '../core/formats/index.ts';
+import { formatFromMapping } from '../core/formats/generic.ts';
+import type { CsvMapping } from '../core/csv/mapping.ts';
 import { importCsv, type ImportBatch, type ImportResult, type Transaction } from '../core/import.ts';
 import type { Ore } from '../core/money.ts';
 import { payday, type PeriodLabel, type PeriodSettings } from '../core/periods.ts';
@@ -64,7 +67,10 @@ export class SpendioStore {
    */
   importCsv(text: string, context: ImportContext): Promise<ImportResult> {
     const { db } = this;
-    return db.transaction('rw', db.transactions, db.importBatches, db.rules, db.accounts, db.categories, async () => {
+    const tables = [db.transactions, db.importBatches, db.rules, db.accounts, db.categories, db.csvMappings];
+    return db.transaction('rw', tables, async () => {
+      // Bank presets first, then the layouts the person mapped themselves.
+      const formats = [...BANK_FORMATS, ...(await db.csvMappings.toArray()).map(formatFromMapping)];
       const existingFingerprints = new Set(await db.transactions.orderBy('fingerprint').keys()) as Set<string>;
       const userRules = await db.rules.toArray();
       const categoryIds = new Set(await db.categories.toCollection().primaryKeys());
@@ -72,6 +78,7 @@ export class SpendioStore {
         existingFingerprints,
         userRules,
         categoryIds,
+        formats,
         now: context.now,
         newId: context.newId,
       });
@@ -97,6 +104,28 @@ export class SpendioStore {
       await db.importBatches.delete(batchId);
       return removed;
     });
+  }
+
+  // ── CSV mappings ───────────────────────────────────────────────────────────
+
+  /** Saved layouts for files no bank preset recognizes, newest first. */
+  async listCsvMappings(): Promise<CsvMapping[]> {
+    return (await this.db.csvMappings.toArray()).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  }
+
+  /** Saves a mapping; a mapping for the same header row is replaced (one mapping per layout). */
+  async saveCsvMapping(mapping: CsvMapping): Promise<void> {
+    const { db } = this;
+    if (!mapping.name.trim()) throw new Error('Give the bank a name');
+    await db.transaction('rw', db.csvMappings, async () => {
+      await db.csvMappings.where('headerSignature').equals(mapping.headerSignature).delete();
+      await db.csvMappings.add({ ...mapping, name: mapping.name.trim() });
+    });
+  }
+
+  /** Forgets a layout. Transactions already imported with it stay. */
+  async deleteCsvMapping(id: string): Promise<void> {
+    await this.db.csvMappings.delete(id);
   }
 
   // ── Transactions ───────────────────────────────────────────────────────────
