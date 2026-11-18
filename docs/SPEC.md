@@ -249,10 +249,10 @@ Clicking a category anywhere → Transactions filtered by that category and peri
 ## 13. Data model (TypeScript, core)
 
 ```ts
-type Ore = number;           // integer öre
+type Ore = number;           // integer minor units (öre for SEK)
 type PeriodLabel = string;   // 'YYYY-MM'
 
-interface Account      { id: string; bank: 'nordea' | 'generic'; name: string }  // no account numbers
+interface Account      { id: string; bank: string; name: string }  // bank = format id, e.g. "nordea"; created on first import; no account numbers
 interface ImportBatch  { id: string; accountId: string; label: string; importedAt: string;
                          rowCount: number; newCount: number; duplicateCount: number; errorCount: number }
 interface Transaction  {
