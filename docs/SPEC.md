@@ -241,12 +241,12 @@ A user's manual category on a single transaction (`categorySource = 'manual'`) i
 4. **Budgets**: "All spending" (the overall limit) first, then only categories *with* a limit, sorted Over → Close → On track (then by ratio), with a meter bar, `spent of limit` and the status spelled out in text ("Over by 29 kr", "84 % used, 131 kr left"). Limits are set, changed or removed inline; a picker offers every spending category without a limit. A change applies from the shown period on. Spending without a limit isn't repeated here — it's in the chart.
 5. **Spending by category**: ranked horizontal bars, largest first, one hue, value at the tip, share of spending on hover/focus. Money back (e.g. Swish from people) is noted under the chart, not drawn as a bar.
 
-Clicking a category anywhere → Transactions filtered by that category and period (once the Transactions page exists).
+Clicking a category anywhere (chart bars, budget rows) → Transactions filtered by that category and period; "All spending" → all transactions in the period.
 
 ### Other pages
 - **Upload** (file picker + drag and drop; supported banks listed from the format registry; clear errors for unsupported, empty or oversized files) → **Import summary** (new / already imported / lines that couldn't be read, with line numbers) → **Review** (one group per merchant *and* kind, so "Swish to Anna" and "Swish from Anna" are separate decisions; sorted by absolute total; category dropdown pre-filled with any suggestion + "Remember" checkbox; "Skip for now"). Until the dashboard exists, the flow ends on a "Saved on this device" screen.
 - Person names (Swish counterparties) are tidied for display only: `DOE,JOHN` → "John Doe", all-caps names re-cased. Rules keep matching the original text.
-- **Transactions**: search, filter (period, category, kind, needs review), inline category edit
+- **Transactions**: one row of filters — period (periods with data, newest first, or all), category (or Needs review), type, and search (merchant, tidied person name, bank text; all words must match) — kept in the URL (`#/transactions?period=…&category=…&kind=…&q=…`) so filtered views survive reloads and can be linked to. Newest first, 100 rows at a time ("Show more"). Each row: readable title, date and type, amount, and an inline category picker that asks "Only this one" or "All from <merchant>" (§7.5).
 - **History**: per budgeted category, month-by-month spending vs that month's limit
 - **Savings**: Left over, savings rate, Moved to savings, month-by-month chart
 - **Categories & Rules**: edit categories, colors and limits; list/delete user rules; view built-in rules
