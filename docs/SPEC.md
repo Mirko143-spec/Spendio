@@ -249,7 +249,7 @@ type PeriodLabel = string;   // 'YYYY-MM'
 
 interface Account      { id: string; bank: 'nordea' | 'generic'; name: string }  // no account numbers
 interface ImportBatch  { id: string; accountId: string; label: string; importedAt: string;
-                         rowCount: number; newCount: number; duplicateCount: number }
+                         rowCount: number; newCount: number; duplicateCount: number; errorCount: number }
 interface Transaction  {
   id: string; accountId: string; importBatchId: string; fingerprint: string;
   bookingDate: string; purchaseDate?: string; effectiveDate: string;   // ISO dates
