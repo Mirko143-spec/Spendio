@@ -1,7 +1,7 @@
-import { BUILTIN_RULES } from './country/se/builtin-rules.ts';
 import { CATEGORY_IDS } from './categories.ts';
+import { DEFAULT_COUNTRY } from './country/index.ts';
+import type { Country } from './country/types.ts';
 import type { TransactionKind } from './formats/types.ts';
-import { looksLikeBusiness } from './country/se/business.ts';
 import { findBestRule, type Rule } from './rules.ts';
 
 /**
@@ -29,11 +29,15 @@ export interface Categorization {
 
 const SWISH_KINDS: ReadonlySet<TransactionKind> = new Set(['swish_out', 'swish_in', 'swish_refund']);
 
-export function categorize(input: CategorizeInput, userRules: readonly Rule[] = []): Categorization {
+export function categorize(
+  input: CategorizeInput,
+  userRules: readonly Rule[] = [],
+  country: Country = DEFAULT_COUNTRY,
+): Categorization {
   const isSwish = SWISH_KINDS.has(input.kind);
-  const builtin = findBestRule(BUILTIN_RULES, input);
+  const builtin = findBestRule(country.builtinRules, input);
   // A Swish counterparty is a business if its name says so or a built-in merchant rule knows it.
-  const person = isSwish ? { counterpartyIsPerson: !builtin && !looksLikeBusiness(input.merchantKey) } : {};
+  const person = isSwish ? { counterpartyIsPerson: !builtin && !country.looksLikeBusiness(input.merchantKey) } : {};
 
   const user = findBestRule(userRules, input);
   if (user) return { categoryId: user.categoryId, source: 'user_rule', suggested: false, ...person };

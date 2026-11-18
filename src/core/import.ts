@@ -1,5 +1,6 @@
 import { accountForFormat, type Account } from './account.ts';
 import { categorize, type CategorySource } from './categorize.ts';
+import { countryFor } from './country/index.ts';
 import type { RowError } from './csv/types.ts';
 import { dedupRows } from './dedup.ts';
 import { BANK_FORMATS, detectFormat } from './formats/index.ts';
@@ -84,6 +85,7 @@ export function importCsv(text: string, options: ImportOptions): ImportResult {
   const { existingFingerprints, userRules = [], now, newId, formats = BANK_FORMATS } = options;
   const format = detectFormat(text, formats);
   if (!format) throw new UnsupportedFormatError();
+  const country = countryFor(format.country);
   const account = accountForFormat(format);
   const accountId = account.id;
   const { rows, errors } = format.parse(text);
@@ -93,7 +95,7 @@ export function importCsv(text: string, options: ImportOptions): ImportResult {
   const transactions = fresh.map((row): Transaction => {
     const described = format.describe(row.description, row.bookingDate);
     const merchant = cleanMerchant(described.counterparty);
-    const category = categorize({ kind: described.kind, merchantKey: merchant.key }, userRules);
+    const category = categorize({ kind: described.kind, merchantKey: merchant.key }, userRules, country);
     return {
       id: newId(),
       accountId,

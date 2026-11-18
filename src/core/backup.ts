@@ -1,10 +1,10 @@
 import type { Account } from './account.ts';
 import type { Budget } from './budgets.ts';
 import { CATEGORY_IDS, type Category } from './categories.ts';
+import { COUNTRIES } from './country/index.ts';
 import type { CsvMapping } from './csv/mapping.ts';
 import type { ImportBatch, Transaction } from './import.ts';
 import type { Rule } from './rules.ts';
-import { redactPersonnummer } from './country/se/personnummer.ts';
 import { SCHEMA_VERSION, type AppSettings } from './settings.ts';
 
 /**
@@ -89,8 +89,13 @@ const OPS = new Set(['equals', 'startsWith', 'contains']);
 /**
  * Parses and validates a backup file. Throws `BackupError` with a readable message if
  * anything is malformed, from a newer app version, or internally inconsistent.
- * Descriptions are scrubbed of personnummer again, in case the file was edited by hand.
+ * Descriptions are scrubbed of national ID numbers (every supported country's format) again,
+ * in case the file was edited by hand.
  */
+function redactPersonalIds(text: string): string {
+  return Object.values(COUNTRIES).reduce((acc, country) => country.redactPersonalIds(acc), text);
+}
+
 export function parseBackup(text: string): Backup {
   let json: unknown;
   try {
@@ -142,7 +147,7 @@ export function parseBackup(text: string): Backup {
     check(KINDS.has(t.kind as string) && isStr(t.merchantKey) && isStr(t.merchantDisplay), where, 'is malformed');
     check(t.categoryId === null || categoryIds.has(t.categoryId as string), where, 'refers to an unknown category');
     check(SOURCES.has(t.categorySource as string) && typeof t.suggested === 'boolean', where, 'is malformed');
-    t.description = redactPersonnummer(t.description as string);
+    t.description = redactPersonalIds(t.description as string);
   }
 
   const rules = list(data, 'rules');

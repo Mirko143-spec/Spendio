@@ -1,19 +1,21 @@
+import { DEFAULT_COUNTRY } from './country/index.ts';
+import type { Country } from './country/types.ts';
 import { addDays, isoDate } from './dates.ts';
-import { lastBankingDayOnOrBefore } from './country/se/holidays.ts';
 
 /**
- * Budget periods that run from payday to payday (docs/SPEC.md §9).
+ * Budget periods that run from payday to payday (docs/SPEC.md §9). Banking days come from the
+ * country (default: Sweden).
  */
 
 export interface PeriodSettings {
   /** Day of the month a period starts on, 1–28. 1 = plain calendar months. */
   startDay: number;
-  /** Move the start back to the last Swedish banking day on or before `startDay`. */
+  /** Move the start back to the last banking day on or before `startDay`. */
   adjustToBankingDay: boolean;
 }
 
-/** Swedish payday: the 25th, moved back to the previous banking day if needed. */
-export const DEFAULT_PERIOD_SETTINGS: PeriodSettings = { startDay: 25, adjustToBankingDay: true };
+/** The default country's period (Sweden: payday on the 25th, moved back to a banking day). */
+export const DEFAULT_PERIOD_SETTINGS: PeriodSettings = DEFAULT_COUNTRY.defaultPeriodSettings;
 
 function assertValidStartDay(startDay: number): void {
   if (!Number.isInteger(startDay) || startDay < 1 || startDay > 28) {
@@ -29,12 +31,19 @@ function assertValidStartDay(startDay: number): void {
  *
  * Start day 1 always gives the 1st, so periods are exact calendar months.
  */
-export function payday(year: number, month: number, settings: PeriodSettings = DEFAULT_PERIOD_SETTINGS): string {
+export function payday(
+  year: number,
+  month: number,
+  settings: PeriodSettings = DEFAULT_PERIOD_SETTINGS,
+  country: Country = DEFAULT_COUNTRY,
+): string {
   assertValidStartDay(settings.startDay);
   const nominal = isoDate(year, month, settings.startDay);
   if (!nominal) throw new RangeError(`Invalid month: ${year}-${month}`);
   if (settings.startDay === 1 || !settings.adjustToBankingDay) return nominal;
-  return lastBankingDayOnOrBefore(nominal);
+  let date = nominal;
+  while (!country.isBankingDay(date)) date = addDays(date, -1);
+  return date;
 }
 
 /** A period label, `YYYY-MM`: the month the period mostly falls in. */
@@ -81,25 +90,33 @@ function labelOffset(settings: PeriodSettings): number {
 }
 
 /** Start and end dates of the period with this label. */
-export function periodRange(label: PeriodLabel, settings: PeriodSettings = DEFAULT_PERIOD_SETTINGS): Period {
+export function periodRange(
+  label: PeriodLabel,
+  settings: PeriodSettings = DEFAULT_PERIOD_SETTINGS,
+  country: Country = DEFAULT_COUNTRY,
+): Period {
   const startMonth = shiftPeriod(label, -labelOffset(settings));
   const nextStartMonth = shiftPeriod(startMonth, 1);
   const s = parseLabel(startMonth);
   const n = parseLabel(nextStartMonth);
   return {
     label,
-    start: payday(s.year, s.month, settings),
-    end: addDays(payday(n.year, n.month, settings), -1),
+    start: payday(s.year, s.month, settings, country),
+    end: addDays(payday(n.year, n.month, settings, country), -1),
   };
 }
 
 /** The label of the period that contains `date` (ISO). */
-export function periodOf(date: string, settings: PeriodSettings = DEFAULT_PERIOD_SETTINGS): PeriodLabel {
+export function periodOf(
+  date: string,
+  settings: PeriodSettings = DEFAULT_PERIOD_SETTINGS,
+  country: Country = DEFAULT_COUNTRY,
+): PeriodLabel {
   // Guess from the calendar month, then step until the range contains the date. Banking-day
   // adjustment moves starts back by at most a few days, so this takes at most one step.
   let label = shiftPeriod(date.slice(0, 7), labelOffset(settings));
   for (;;) {
-    const range = periodRange(label, settings);
+    const range = periodRange(label, settings, country);
     if (date < range.start) label = shiftPeriod(label, -1);
     else if (date > range.end) label = shiftPeriod(label, 1);
     else return label;

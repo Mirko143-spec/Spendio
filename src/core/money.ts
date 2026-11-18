@@ -1,4 +1,7 @@
-/** Money amount in integer öre (1 kr = 100 öre). Avoids floating-point rounding errors. */
+import { DEFAULT_COUNTRY } from './country/index.ts';
+import type { Country } from './country/types.ts';
+
+/** Money amount in integer minor currency units (öre for SEK: 1 kr = 100 öre). Avoids floating-point errors. */
 export type Ore = number;
 
 export interface ParseAmountOptions {
@@ -37,9 +40,18 @@ export function parseAmount(input: string, options: ParseAmountOptions = {}): Or
   return sign === '-' && ore !== 0 ? -ore : ore;
 }
 
-const SEK = new Intl.NumberFormat('sv-SE', { style: 'currency', currency: 'SEK' });
+const formatters = new Map<string, Intl.NumberFormat>();
 
-/** Formats öre for display in Swedish style, e.g. 123456 → "1 234,56 kr" (with no-break spaces). */
-export function formatAmount(ore: Ore): string {
-  return SEK.format(ore / 100);
+/**
+ * Formats an amount in the country's currency and style. Sweden (default): 123456 → "1 234,56 kr"
+ * (with no-break spaces).
+ */
+export function formatAmount(ore: Ore, country: Pick<Country, 'locale' | 'currency'> = DEFAULT_COUNTRY): string {
+  const key = `${country.locale}|${country.currency}`;
+  let formatter = formatters.get(key);
+  if (!formatter) {
+    formatter = new Intl.NumberFormat(country.locale, { style: 'currency', currency: country.currency });
+    formatters.set(key, formatter);
+  }
+  return formatter.format(ore / 100);
 }
