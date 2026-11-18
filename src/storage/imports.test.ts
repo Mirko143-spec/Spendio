@@ -11,10 +11,10 @@ const fixture = readFileSync(join(import.meta.dirname, '../../fixtures/nordea-sa
 let seq = 0;
 const context = (now = '2026-12-29T10:00:00.000Z'): ImportContext => ({ now, newId: () => `id-${++seq}` });
 
-describe('importNordea', () => {
+describe('importCsv', () => {
   it('stores all rows and the batch on the first import', async () => {
     await using store = await freshStore();
-    const result = await store.importNordea(fixture, context());
+    const result = await store.importCsv(fixture, context());
     expect(result.batch).toMatchObject({ newCount: 28, duplicateCount: 0, errorCount: 0 });
     expect(await store.listTransactions()).toHaveLength(28);
     expect(await store.listImportBatches()).toEqual([result.batch]);
@@ -22,8 +22,8 @@ describe('importNordea', () => {
 
   it('adds nothing and stores no empty batch when the same file is imported again', async () => {
     await using store = await freshStore();
-    await store.importNordea(fixture, context('2026-12-29T10:00:00.000Z'));
-    const again = await store.importNordea(fixture, context('2026-12-30T10:00:00.000Z'));
+    await store.importCsv(fixture, context('2026-12-29T10:00:00.000Z'));
+    const again = await store.importCsv(fixture, context('2026-12-30T10:00:00.000Z'));
     expect(again.batch).toMatchObject({ newCount: 0, duplicateCount: 28 });
     expect(await store.listTransactions()).toHaveLength(28);
     expect(await store.listImportBatches()).toHaveLength(1);
@@ -33,8 +33,8 @@ describe('importNordea', () => {
     await using store = await freshStore();
     const lines = fixture.split('\n');
     const olderExport = [lines[0], ...lines.slice(9)].join('\n'); // header + the 20 oldest rows
-    await store.importNordea(olderExport, context('2026-12-01T10:00:00.000Z'));
-    const later = await store.importNordea(fixture, context('2026-12-29T10:00:00.000Z'));
+    await store.importCsv(olderExport, context('2026-12-01T10:00:00.000Z'));
+    const later = await store.importCsv(fixture, context('2026-12-29T10:00:00.000Z'));
     expect(later.batch).toMatchObject({ newCount: 8, duplicateCount: 20 });
     expect(await store.listTransactions()).toHaveLength(28);
   });
@@ -49,14 +49,14 @@ describe('importNordea', () => {
       categoryId: CATEGORY_IDS.shopping,
       createdAt: '2026-12-01T00:00:00.000Z',
     });
-    await store.importNordea(fixture, context());
+    await store.importCsv(fixture, context());
     const swish = (await store.listTransactions()).find((t) => t.merchantKey === 'EXEMPELBUTIKEN AB');
     expect(swish).toMatchObject({ categoryId: CATEGORY_IDS.shopping, categorySource: 'user_rule' });
   });
 
   it('saves nothing when the write fails part-way', async () => {
     await using store = await freshStore();
-    await store.importNordea(fixture, context());
+    await store.importCsv(fixture, context());
     const before = await store.listTransactions();
     // Simulate a race: wipe the fingerprint read so dedup misses, then let the unique index reject the write.
     const original = store.db.transactions.orderBy.bind(store.db.transactions);
@@ -64,7 +64,7 @@ describe('importNordea', () => {
       const collection = original(index);
       return Object.assign(collection, { keys: async () => [] });
     }) as typeof store.db.transactions.orderBy;
-    await expect(store.importNordea(fixture, context('2026-12-31T10:00:00.000Z'))).rejects.toThrow();
+    await expect(store.importCsv(fixture, context('2026-12-31T10:00:00.000Z'))).rejects.toThrow();
     expect(await store.listTransactions()).toEqual(before);
     expect(await store.listImportBatches()).toHaveLength(1);
   });
@@ -73,7 +73,7 @@ describe('importNordea', () => {
 describe('listTransactions', () => {
   it('filters by an inclusive date range, oldest first', async () => {
     await using store = await freshStore();
-    await store.importNordea(fixture, context());
+    await store.importCsv(fixture, context());
     const november = periodRange('2026-11'); // Oct 23 – Nov 24
     const rows = await store.listTransactions(november);
     expect(rows).toHaveLength(17);
@@ -88,8 +88,8 @@ describe('deleteImportBatch', () => {
   it('removes the batch and only its transactions', async () => {
     await using store = await freshStore();
     const lines = fixture.split('\n');
-    const first = await store.importNordea([lines[0], ...lines.slice(9)].join('\n'), context('2026-12-01T10:00:00.000Z'));
-    const second = await store.importNordea(fixture, context('2026-12-29T10:00:00.000Z'));
+    const first = await store.importCsv([lines[0], ...lines.slice(9)].join('\n'), context('2026-12-01T10:00:00.000Z'));
+    const second = await store.importCsv(fixture, context('2026-12-29T10:00:00.000Z'));
 
     expect(await store.deleteImportBatch(second.batch.id)).toBe(8);
     expect(await store.listTransactions()).toHaveLength(20);
@@ -98,9 +98,35 @@ describe('deleteImportBatch', () => {
 
   it('lets the same rows be imported again after undo', async () => {
     await using store = await freshStore();
-    const { batch } = await store.importNordea(fixture, context());
+    const { batch } = await store.importCsv(fixture, context());
     await store.deleteImportBatch(batch.id);
-    const again = await store.importNordea(fixture, context('2026-12-30T10:00:00.000Z'));
+    const again = await store.importCsv(fixture, context('2026-12-30T10:00:00.000Z'));
     expect(again.batch.newCount).toBe(28);
+  });
+});
+
+describe('importCsv with an unsupported file', () => {
+  it('throws and stores nothing', async () => {
+    await using store = await freshStore();
+    await expect(store.importCsv('Date,Amount\n2026-11-01,-1.00', context())).rejects.toThrow(/not in a supported bank format/);
+    expect(await store.listTransactions()).toEqual([]);
+    expect(await store.listImportBatches()).toEqual([]);
+  });
+});
+
+describe('accounts', () => {
+  it('creates the bank account on the first import, once', async () => {
+    await using store = await freshStore();
+    expect(await store.listAccounts()).toEqual([]);
+    await store.importCsv(fixture, context('2026-12-29T10:00:00.000Z'));
+    await store.importCsv(fixture, context('2026-12-30T10:00:00.000Z'));
+    expect(await store.listAccounts()).toEqual([{ id: 'account:nordea', bank: 'nordea', name: 'Nordea' }]);
+    expect(new Set((await store.listTransactions()).map((t) => t.accountId))).toEqual(new Set(['account:nordea']));
+  });
+
+  it('creates no account when an import adds nothing', async () => {
+    await using store = await freshStore();
+    await store.importCsv(fixture.split('\n')[0]!, context());
+    expect(await store.listAccounts()).toEqual([]);
   });
 });

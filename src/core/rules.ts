@@ -1,4 +1,4 @@
-import type { TransactionKind } from './describe.ts';
+import type { TransactionKind } from './formats/types.ts';
 
 /**
  * Categorization rules and their priority (docs/SPEC.md §7.1–7.2).

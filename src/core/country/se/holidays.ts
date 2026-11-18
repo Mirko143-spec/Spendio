@@ -1,4 +1,4 @@
-import { addDays, isoDate, weekday } from './dates.ts';
+import { addDays, isoDate, weekday } from '../../dates.ts';
 
 /**
  * Swedish banking days (docs/SPEC.md §9). Computed locally, no API.

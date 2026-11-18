@@ -1,9 +1,9 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { parseNordeaCsv } from './csv/nordea.ts';
-import { describeTransaction } from './describe.ts';
-import { cleanMerchant, looksLikeBusiness } from './merchant.ts';
+import { parseNordeaCsv } from './formats/nordea/parse.ts';
+import { describeTransaction } from './formats/nordea/describe.ts';
+import { cleanMerchant } from './merchant.ts';
 
 describe('cleanMerchant', () => {
   it.each([
@@ -48,21 +48,6 @@ describe('cleanMerchant', () => {
   it('strips several trailing noise tokens', () => {
     expect(cleanMerchant('Exempel Shop 12 9988776').display).toBe('Exempel Shop');
   });
-});
-
-describe('looksLikeBusiness', () => {
-  it.each(['EXEMPELBUTIKEN AB', 'AB STORSTOCKHOLMS L', 'STIFTELSEN EXEMPELHUSET', 'Exempel Handelsbolag HB'])(
-    '%s is a business',
-    (name) => {
-    expect(looksLikeBusiness(name)).toBe(true);
-  });
-
-  it.each(['ANNA TESTSSON', 'DOE,JOHN', 'Abbe Testsson', 'KBARNA EXEMPEL', 'Idrottsföreningen Exempel'])(
-    '%s is not flagged (no whole-word marker)',
-    (name) => {
-      expect(looksLikeBusiness(name)).toBe(false);
-    },
-  );
 });
 
 describe('cleanMerchant on the fixture', () => {

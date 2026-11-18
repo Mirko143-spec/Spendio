@@ -1,15 +1,18 @@
+import { accountForFormat, type Account } from './account.ts';
 import { categorize, type CategorySource } from './categorize.ts';
-import { parseNordeaCsv } from './csv/nordea.ts';
+import { countryFor } from './country/index.ts';
 import type { RowError } from './csv/types.ts';
 import { dedupRows } from './dedup.ts';
-import { describeTransaction, type TransactionKind } from './describe.ts';
+import { BANK_FORMATS, detectFormat } from './formats/index.ts';
+import type { BankFormat, TransactionKind } from './formats/types.ts';
 import { cleanMerchant } from './merchant.ts';
 import type { Ore } from './money.ts';
 import type { Rule } from './rules.ts';
 
 /**
- * The import pipeline (docs/SPEC.md §8): parse → scrub → dedup → describe → clean merchant →
- * categorize. Pure: ids and the clock are passed in, and nothing is stored here.
+ * The bank-neutral import pipeline (docs/SPEC.md §8): detect format → parse (and scrub) →
+ * dedup → describe → clean merchant → categorize. Pure: ids and the clock are passed in, and
+ * nothing is stored here.
  */
 
 export interface Transaction {
@@ -40,7 +43,7 @@ export interface Transaction {
 export interface ImportBatch {
   id: string;
   accountId: string;
-  /** E.g. "Nordea · 2026-11-16". Never the file name, which can contain a personnummer. */
+  /** Bank name and date, e.g. "Nordea · 2026-11-16". Never the file name, which can contain a personnummer. */
   label: string;
   importedAt: string;
   rowCount: number;
@@ -50,31 +53,49 @@ export interface ImportBatch {
 }
 
 export interface ImportOptions {
-  accountId: string;
   existingFingerprints: ReadonlySet<string>;
   userRules?: readonly Rule[];
   /** ISO timestamp of the import. */
   now: string;
   newId: () => string;
+  /** Formats to try, in order. Defaults to every built-in preset. */
+  formats?: readonly BankFormat[];
 }
 
 export interface ImportResult {
+  /** The bank format that recognized the file. */
+  format: Pick<BankFormat, 'id' | 'name' | 'country'>;
+  /** The account the transactions belong to; the caller creates it if it doesn't exist yet. */
+  account: Account;
   batch: ImportBatch;
   /** New transactions only, in file order. */
   transactions: Transaction[];
   errors: RowError[];
 }
 
-export function importNordeaCsv(text: string, options: ImportOptions): ImportResult {
-  const { accountId, existingFingerprints, userRules = [], now, newId } = options;
-  const { rows, errors } = parseNordeaCsv(text);
+/** Thrown when no bank format recognizes the file (the UI then offers the generic mapper). */
+export class UnsupportedFormatError extends Error {
+  override name = 'UnsupportedFormatError';
+  constructor() {
+    super('This file is not in a supported bank format.');
+  }
+}
+
+export function importCsv(text: string, options: ImportOptions): ImportResult {
+  const { existingFingerprints, userRules = [], now, newId, formats = BANK_FORMATS } = options;
+  const format = detectFormat(text, formats);
+  if (!format) throw new UnsupportedFormatError();
+  const country = countryFor(format.country);
+  const account = accountForFormat(format);
+  const accountId = account.id;
+  const { rows, errors } = format.parse(text);
   const { fresh, duplicateCount } = dedupRows(accountId, rows, existingFingerprints);
   const batchId = newId();
 
   const transactions = fresh.map((row): Transaction => {
-    const described = describeTransaction(row.description, row.bookingDate);
+    const described = format.describe(row.description, row.bookingDate);
     const merchant = cleanMerchant(described.counterparty);
-    const category = categorize({ kind: described.kind, merchantKey: merchant.key }, userRules);
+    const category = categorize({ kind: described.kind, merchantKey: merchant.key }, userRules, country);
     return {
       id: newId(),
       accountId,
@@ -98,10 +119,12 @@ export function importNordeaCsv(text: string, options: ImportOptions): ImportRes
   });
 
   return {
+    format: { id: format.id, name: format.name, country: format.country },
+    account,
     batch: {
       id: batchId,
       accountId,
-      label: `Nordea · ${now.slice(0, 10)}`,
+      label: `${format.name} · ${now.slice(0, 10)}`,
       importedAt: now,
       rowCount: rows.length + errors.length,
       newCount: transactions.length,

@@ -2,7 +2,9 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { CATEGORY_IDS as C, DEFAULT_CATEGORIES } from './categories.ts';
-import { importNordeaCsv, type ImportOptions } from './import.ts';
+import { NORDEA } from './formats/nordea/index.ts';
+import type { BankFormat } from './formats/types.ts';
+import { importCsv, UnsupportedFormatError, type ImportOptions } from './import.ts';
 import type { Rule } from './rules.ts';
 import { summarizePeriod } from './summary.ts';
 
@@ -11,7 +13,6 @@ const fixture = readFileSync(join(import.meta.dirname, '../../fixtures/nordea-sa
 function options(overrides: Partial<ImportOptions> = {}): ImportOptions {
   let seq = 0;
   return {
-    accountId: 'nordea-personkonto',
     existingFingerprints: new Set(),
     now: '2026-12-29T10:00:00.000Z',
     newId: () => `id-${++seq}`,
@@ -19,13 +20,18 @@ function options(overrides: Partial<ImportOptions> = {}): ImportOptions {
   };
 }
 
-describe('importNordeaCsv', () => {
-  const result = importNordeaCsv(fixture, options());
+describe('importCsv', () => {
+  const result = importCsv(fixture, options());
+
+  it('reports which bank format recognized the file', () => {
+    expect(result.format).toEqual({ id: 'nordea', name: 'Nordea', country: 'SE' });
+    expect(result.account).toEqual({ id: 'account:nordea', bank: 'nordea', name: 'Nordea' });
+  });
 
   it('produces a batch summary', () => {
     expect(result.batch).toEqual({
       id: 'id-1',
-      accountId: 'nordea-personkonto',
+      accountId: 'account:nordea',
       label: 'Nordea · 2026-12-29',
       importedAt: '2026-12-29T10:00:00.000Z',
       rowCount: 28,
@@ -40,7 +46,7 @@ describe('importNordeaCsv', () => {
     const parkster = result.transactions.find((t) => t.merchantKey === 'PARKSTER SWE');
     expect(parkster).toEqual({
       id: expect.any(String),
-      accountId: 'nordea-personkonto',
+      accountId: 'account:nordea',
       importBatchId: 'id-1',
       fingerprint: expect.any(String),
       bookingDate: '2026-11-25',
@@ -75,7 +81,7 @@ describe('importNordeaCsv', () => {
   });
 
   it('imports nothing on re-upload', () => {
-    const again = importNordeaCsv(
+    const again = importCsv(
       fixture,
       options({ existingFingerprints: new Set(result.transactions.map((t) => t.fingerprint)) }),
     );
@@ -92,7 +98,7 @@ describe('importNordeaCsv', () => {
       categoryId: C.shopping,
       createdAt: '2026-12-01T00:00:00Z',
     };
-    const withRule = importNordeaCsv(fixture, options({ userRules: [rule] }));
+    const withRule = importCsv(fixture, options({ userRules: [rule] }));
     expect(withRule.transactions.find((t) => t.merchantKey === 'EXEMPELBUTIKEN AB')).toMatchObject({
       categoryId: C.shopping,
       categorySource: 'user_rule',
@@ -101,14 +107,14 @@ describe('importNordeaCsv', () => {
 
   it('reports bad rows in the batch', () => {
     const broken = fixture + '\n2026/12/30;abc;;;;Broken row;0,00;SEK;';
-    const r = importNordeaCsv(broken, options());
+    const r = importCsv(broken, options());
     expect(r.batch).toMatchObject({ rowCount: 29, newCount: 28, errorCount: 1 });
     expect(r.errors).toEqual([{ line: 30, message: 'Invalid amount: "abc"' }]);
   });
 });
 
 describe('fixture end to end: import → period summaries (hand-checked)', () => {
-  const { transactions } = importNordeaCsv(fixture, options());
+  const { transactions } = importCsv(fixture, options());
   const summary = (label: string) => summarizePeriod(transactions, DEFAULT_CATEGORIES, label);
 
   it('October 2026 (Sep 25 – Oct 22): spending without income', () => {
@@ -168,5 +174,27 @@ describe('fixture end to end: import → period summaries (hand-checked)', () =>
       return n + categorized;
     }, 0);
     expect(counted).toBe(transactions.length);
+  });
+});
+
+describe('importCsv format detection', () => {
+  it('rejects files no format recognizes', () => {
+    expect(() => importCsv('Date,Amount,Description\n2026-11-01,-10.00,Coffee', options())).toThrow(
+      UnsupportedFormatError,
+    );
+  });
+
+  it('uses the detected format to parse, describe and label', () => {
+    // A stand-in bank that reuses Nordea's parser but has its own name and description reader.
+    const other: BankFormat = {
+      ...NORDEA,
+      id: 'testbank',
+      name: 'Testbank',
+      describe: (_description, bookingDate) => ({ kind: 'other', counterparty: 'SAME', effectiveDate: bookingDate }),
+    };
+    const r = importCsv(fixture, options({ formats: [other] }));
+    expect(r.format).toEqual({ id: 'testbank', name: 'Testbank', country: 'SE' });
+    expect(r.batch.label).toBe('Testbank · 2026-12-29');
+    expect(new Set(r.transactions.map((t) => t.merchantKey))).toEqual(new Set(['SAME']));
   });
 });

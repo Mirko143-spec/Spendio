@@ -17,11 +17,13 @@ Spendio is a budgeting web app. You upload a bank statement CSV; Spendio automat
 3. **Correct numbers over clever features.** Transfers are never spending; refunds offset spending; past budget months are never rewritten.
 4. **Pure core.** All domain logic lives in a framework-free TypeScript module with exhaustive unit tests.
 5. **Designed for later.** Sync, AI categorization, encryption and more banks must be addable without migrations that break existing data.
+6. **Generic by design.** Spendio is not tied to one bank or country. Each bank's export is a pluggable **bank format** (Nordea is the first), and everything country-specific (currency, banking days, payday, merchant rules, national ID scrubbing) sits behind a **country** definition (Sweden is the only one in v1). Bank-neutral code never names a specific bank or country.
 
 ## 3. Scope
 
 ### v1
-- Nordea CSV import (preset) + generic CSV column mapper (saved per file layout)
+- CSV import from any bank: built-in bank-format presets (Nordea first; more Swedish banks can be added as presets) + generic CSV column mapper for everything else (saved per file layout)
+- One country, Sweden (SEK, Swedish banking days and merchant rules), behind a country definition so others can be added later
 - Duplicate-safe re-imports, import summary, undo an import batch
 - Rules-based categorization (built-in Swedish rules + rules learned from user corrections)
 - Post-upload review, grouped by merchant
@@ -41,16 +43,19 @@ Spendio is a budgeting web app. You upload a bank statement CSV; Spendio automat
 - Optional accounts + sync across devices (backend)
 - Multiple accounts (e.g. savings, credit card), multi-currency
 - More bank presets, PDF statements
+- More countries (a new `country/` definition: currency, banking days, payday, merchant rules, ID scrubbing)
 - Split transactions, budget rollover, per-month limit overrides
 - Swedish UI language
 - Backup *merge* (v1 backup import replaces everything)
 
 ### Explicitly out of scope for v1
-Server-side storage, user accounts, AI, PDF parsing, multiple accounts, multiple currencies, split transactions, rollover.
+Server-side storage, user accounts, AI, PDF parsing, multiple accounts per bank, countries other than Sweden, multiple currencies, split transactions, rollover.
 
 ## 4. Data input
 
-### 4.1 Nordea CSV format (observed in a real export, 2026-11-16)
+Each bank's export is a **bank format** (`core/formats/`): an id, a display name, its country, and functions to `detect` the file (header only), `parse` it into rows, and `describe` its description text (§5). The import pipeline tries the registered formats in order and uses the first that matches; a file no format recognizes goes to the generic mapper (§4.2). Adding a bank means adding one format and registering it.
+
+### 4.1 Nordea (first bank format; observed in a real export, 2026-11-16)
 
 ```
 Bokföringsdag;Belopp;Avsändare;Mottagare;Namn;Rubrik;Saldo;Valuta;
@@ -69,7 +74,7 @@ Bokföringsdag;Belopp;Avsändare;Mottagare;Namn;Rubrik;Saldo;Valuta;
 | `Saldo` | Running balance after the transaction, used for dedup |
 | `Valuta` | `SEK` |
 | Order | Newest first |
-| Filename | Contains the personnummer → never stored; batches are labelled `Nordea · <import date>` |
+| Filename | Contains the personnummer → never stored; batches are labelled `<bank name> · <import date>` (here `Nordea · 2026-11-16`) |
 
 Detection: header row (after stripping the BOM) matches the Nordea column set.
 
@@ -178,11 +183,11 @@ A user's manual category on a single transaction (`categorySource = 'manual'`) i
 
 ## 8. Import pipeline
 
-1. Read file → detect preset (Nordea) or open the generic mapper.
-2. Parse rows → scrub personnummer → parse amounts (öre), dates, `Rubrik`.
+1. Read file → detect its **bank format** (§4); if none matches, open the generic mapper.
+2. Parse rows with that format → scrub national ID numbers → parse amounts (öre), dates, descriptions.
 3. **Dedup** (below).
-4. Categorize new rows.
-5. Save as one **ImportBatch**.
+4. Describe (format) and categorize new rows with the rules of the format's **country**.
+5. Save as one **ImportBatch**, in one storage transaction. The bank's **account** is created on its first import (a fresh install has none).
 6. Show **import summary**: `56 rows · 41 new · 15 already imported`.
 7. Go to **review** (skippable).
 
@@ -244,10 +249,10 @@ Clicking a category anywhere → Transactions filtered by that category and peri
 ## 13. Data model (TypeScript, core)
 
 ```ts
-type Ore = number;           // integer öre
+type Ore = number;           // integer minor units (öre for SEK)
 type PeriodLabel = string;   // 'YYYY-MM'
 
-interface Account      { id: string; bank: 'nordea' | 'generic'; name: string }  // no account numbers
+interface Account      { id: string; bank: string; name: string }  // bank = format id, e.g. "nordea"; created on first import; no account numbers
 interface ImportBatch  { id: string; accountId: string; label: string; importedAt: string;
                          rowCount: number; newCount: number; duplicateCount: number; errorCount: number }
 interface Transaction  {
@@ -280,19 +285,23 @@ Built-in rules ship in code (versioned), not in the database, so they can be imp
 ```
 src/
   core/              pure TS, no React, no browser APIs, fully unit-tested (enforced by ESLint)
-    csv/               types.ts, nordea.ts (preset), mapping.ts (generic mapper type; generic.ts in step 6)
-    money.ts           öre parsing/formatting
-    scrub.ts           personnummer detection/redaction
+    formats/           bank formats; bank-neutral code reaches them only via index.ts
+      types.ts           BankFormat interface, TransactionKind, Described
+      index.ts           registry (BANK_FORMATS) + detectFormat
+      nordea/            parse.ts (CSV), describe.ts (Rubrik → kind, dates), index.ts (NORDEA)
+    country/           country specifics; bank-neutral code reaches them only via index.ts
+      types.ts           Country interface
+      index.ts           registry (COUNTRIES), DEFAULT_COUNTRY, countryFor
+      se/                Sweden: holidays.ts, personnummer.ts, builtin-rules.ts, business.ts, index.ts (SWEDEN)
+    csv/               types.ts (ParsedRow, ParseResult), mapping.ts (generic mapper type; generic.ts in step 6)
+    money.ts           amount parsing (minor units) + formatting in the country's currency
     dates.ts           UTC calendar-date helpers
-    describe.ts        Rubrik → kind, purchaseDate, effectiveDate
-    merchant.ts        merchant cleanup, Swish business detection
-    holidays.ts        Swedish banking days
-    periods.ts         payday periods and labels
+    merchant.ts        merchant name cleanup
+    periods.ts         payday periods and labels (banking days from the country)
     dedup.ts           import fingerprints
     categories.ts      default + system categories
     rules.ts           rule matching + priority
-    builtin-rules.ts   Swedish merchant rules
-    categorize.ts      rules → kind defaults → Needs review
+    categorize.ts      user rules → country rules → kind defaults → Needs review
     budgets.ts         limits with effectiveFrom, status
     summary.ts         period aggregates (spent, income, left over, savings, needs review)
     import.ts          pure import pipeline, Transaction + ImportBatch types

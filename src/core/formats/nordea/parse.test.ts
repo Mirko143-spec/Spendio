@@ -1,9 +1,9 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { isNordeaCsv, parseNordeaCsv } from './nordea.ts';
+import { isNordeaCsv, parseNordeaCsv } from './parse.ts';
 
-const fixture = readFileSync(join(import.meta.dirname, '../../../fixtures/nordea-sample.csv'), 'utf8');
+const fixture = readFileSync(join(import.meta.dirname, '../../../../fixtures/nordea-sample.csv'), 'utf8');
 
 const HEADER = 'Bokföringsdag;Belopp;Avsändare;Mottagare;Namn;Rubrik;Saldo;Valuta;';
 const csv = (...lines: string[]) => '﻿' + [HEADER, ...lines].join('\n');

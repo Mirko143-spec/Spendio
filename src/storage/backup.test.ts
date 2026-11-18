@@ -1,7 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_ACCOUNT } from '../core/account.ts';
 import { parseBackup, serializeBackup, type Backup } from '../core/backup.ts';
 import { CATEGORY_IDS as C, DEFAULT_CATEGORIES } from '../core/categories.ts';
 import { DEFAULT_SETTINGS } from '../core/settings.ts';
@@ -15,7 +14,7 @@ const NOW = '2026-12-29T10:00:00.000Z';
 
 /** A store with an import, a manual edit, a custom category, a rule, a budget and changed settings. */
 async function populate(store: SpendioStore): Promise<void> {
-  await store.importNordea(fixture, { now: NOW, newId });
+  await store.importCsv(fixture, { now: NOW, newId });
   const t = (await store.listTransactions())[0]!;
   await store.setTransactionCategory(t.id, C.entertainment);
   await store.addCategory({ name: 'Pets', color: '#123456' }, newId);
@@ -90,7 +89,7 @@ describe('wipeAll', () => {
     expect(await store.listImportBatches()).toEqual([]);
     expect(await store.listUserRules()).toEqual([]);
     expect(await store.listBudgets()).toEqual([]);
-    expect(await store.listAccounts()).toEqual([DEFAULT_ACCOUNT]);
+    expect(await store.listAccounts()).toEqual([]);
     expect(await store.listCategories()).toHaveLength(DEFAULT_CATEGORIES.length);
     expect(await store.getSettings()).toEqual(DEFAULT_SETTINGS);
   });

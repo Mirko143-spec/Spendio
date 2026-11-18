@@ -1,10 +1,9 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_ACCOUNT } from './account.ts';
 import { backupFileName, BackupError, createBackup, parseBackup, serializeBackup, type BackupData } from './backup.ts';
 import { CATEGORY_IDS as C, DEFAULT_CATEGORIES } from './categories.ts';
-import { importNordeaCsv } from './import.ts';
+import { importCsv } from './import.ts';
 import { DEFAULT_SETTINGS, SCHEMA_VERSION } from './settings.ts';
 
 // These tests deliberately corrupt raw backup JSON, which has no useful static type.
@@ -15,14 +14,13 @@ const fixture = readFileSync(join(import.meta.dirname, '../../fixtures/nordea-sa
 
 function sampleData(): BackupData {
   let seq = 0;
-  const { batch, transactions } = importNordeaCsv(fixture, {
-    accountId: DEFAULT_ACCOUNT.id,
+  const { account, batch, transactions } = importCsv(fixture, {
     existingFingerprints: new Set(),
     now: '2026-12-29T10:00:00.000Z',
     newId: () => `id-${++seq}`,
   });
   return {
-    accounts: [DEFAULT_ACCOUNT],
+    accounts: [account],
     importBatches: [batch],
     transactions,
     categories: [...DEFAULT_CATEGORIES],

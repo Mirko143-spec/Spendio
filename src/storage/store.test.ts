@@ -1,18 +1,17 @@
 import Dexie from 'dexie';
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_ACCOUNT } from '../core/account.ts';
 import { DEFAULT_CATEGORIES } from '../core/categories.ts';
 import { DEFAULT_SETTINGS } from '../core/settings.ts';
 import { openStore } from './store.ts';
 import { freshStore } from './testing.ts';
 
 describe('openStore', () => {
-  it('seeds default categories, settings and account on first open', async () => {
+  it('seeds default categories and settings, and no accounts, on first open', async () => {
     await using store = await freshStore();
     expect(await store.listCategories()).toEqual(expect.arrayContaining([...DEFAULT_CATEGORIES]));
     expect(await store.listCategories()).toHaveLength(DEFAULT_CATEGORIES.length);
     expect(await store.getSettings()).toEqual(DEFAULT_SETTINGS);
-    expect(await store.listAccounts()).toEqual([DEFAULT_ACCOUNT]);
+    expect(await store.listAccounts()).toEqual([]);
   });
 
   it('does not seed again when an existing database is reopened', async () => {

@@ -1,5 +1,5 @@
 import Dexie, { type EntityTable } from 'dexie';
-import { DEFAULT_ACCOUNT, type Account } from '../core/account.ts';
+import type { Account } from '../core/account.ts';
 import type { Budget } from '../core/budgets.ts';
 import { DEFAULT_CATEGORIES, type Category } from '../core/categories.ts';
 import type { CsvMapping } from '../core/csv/mapping.ts';
@@ -42,9 +42,8 @@ export class SpendioDB extends Dexie {
       settings: 'key',
     });
 
-    // Runs once, when the database is first created.
+    // Runs once, when the database is first created. Accounts are created by the first import.
     this.on('populate', (tx) => {
-      void tx.table('accounts').add(DEFAULT_ACCOUNT);
       void tx.table('categories').bulkAdd([...DEFAULT_CATEGORIES]);
       void tx.table('settings').add({ key: 'app', ...DEFAULT_SETTINGS } satisfies SettingsRow);
     });

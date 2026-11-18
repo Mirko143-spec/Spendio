@@ -1,5 +1,5 @@
-import { CATEGORY_IDS } from './categories.ts';
-import type { MatchOp, Rule } from './rules.ts';
+import { CATEGORY_IDS } from '../../categories.ts';
+import type { MatchOp, Rule } from '../../rules.ts';
 
 /**
  * Built-in merchant rules for Sweden (docs/SPEC.md §7.3). Shipped in code, not stored, so

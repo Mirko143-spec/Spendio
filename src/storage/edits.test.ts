@@ -10,7 +10,7 @@ const newId = () => `id-${++seq}`;
 
 async function importedStore() {
   const store = await freshStore();
-  await store.importNordea(fixture, { now: '2026-12-29T10:00:00.000Z', newId });
+  await store.importCsv(fixture, { now: '2026-12-29T10:00:00.000Z', newId });
   return store;
 }
 
@@ -37,7 +37,7 @@ describe('setTransactionCategory', () => {
     await using store = await importedStore();
     const t = (await store.listTransactions()).find((x) => x.merchantKey === 'SPOTIFY')!;
     await store.setTransactionCategory(t.id, C.entertainment);
-    await store.importNordea(fixture, { now: '2026-12-30T10:00:00.000Z', newId });
+    await store.importCsv(fixture, { now: '2026-12-30T10:00:00.000Z', newId });
     expect(await store.db.transactions.get(t.id)).toMatchObject({ categoryId: C.entertainment });
   });
 
