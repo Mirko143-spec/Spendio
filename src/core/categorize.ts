@@ -47,5 +47,8 @@ export function categorize(
   if (input.kind === 'swish_out' && person.counterpartyIsPerson) {
     return { categoryId: CATEGORY_IDS.swishPeople, source: 'kind_default', suggested: true, ...person };
   }
+  if (input.kind === 'swish_in' && person.counterpartyIsPerson) {
+    return { categoryId: CATEGORY_IDS.swishFromPeople, source: 'kind_default', suggested: true, ...person };
+  }
   return { categoryId: null, source: 'none', suggested: false, ...person };
 }

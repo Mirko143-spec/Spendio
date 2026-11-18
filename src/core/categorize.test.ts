@@ -84,11 +84,11 @@ describe('categorize defaults by kind', () => {
     });
   });
 
-  it('leaves incoming Swish from a person for review', () => {
+  it('suggests "Swish from people" for incoming Swish from a person', () => {
     expect(categorize(input('swish_in', 'DOE,JOHN'))).toEqual({
-      categoryId: null,
-      source: 'none',
-      suggested: false,
+      categoryId: C.swishFromPeople,
+      source: 'kind_default',
+      suggested: true,
       counterpartyIsPerson: true,
     });
   });
@@ -171,7 +171,7 @@ describe('categorize on the fixture', () => {
       'Kortköp 261124 PARKSTER SWE': C.transport,
       Insättningsautomat: C.income,
       'Autogiro nordicwell': C.health,
-      'Swish inbetalning DOE,JOHN': null,
+      'Swish inbetalning DOE,JOHN': C.swishFromPeople,
       'Swish återbetalning STIFTELSEN EXEMPELHUSET': null,
       LYSA: C.savings,
       'Kortköp 261104 NMB*Exempel Konditori': C.restaurants,
@@ -179,7 +179,7 @@ describe('categorize on the fixture', () => {
       'Kortköp 261102 ROBLOX.COM 188885825': C.gaming,
       'Kortköp 261031 SJ.SE': C.transport,
       'Swish betalning EXEMPELBUTIKEN AB': null,
-      'Swish inbetalning ANNA TESTSSON': null,
+      'Swish inbetalning ANNA TESTSSON': C.swishFromPeople,
       'Kortköp 261025 WL *STEAM PURCHASE': C.gaming,
       'Kortköp 261023 Espresso House 123': C.restaurants,
       'Swish betalning ANNA TESTSSON': C.swishPeople,

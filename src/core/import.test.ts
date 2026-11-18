@@ -139,10 +139,10 @@ describe('fixture end to end: import → period summaries (hand-checked)', () =>
         [C.health]: 54600,
       },
       netSpending: 182500,
-      income: 1359200 + 100000,
-      leftOver: 1459200 - 182500,
+      income: 1359200 + 100000 + 12500 + 150000, // CSN + cash deposit + Swish from people
+      leftOver: 1621700 - 182500,
       movedToSavings: 500000 - 200000,
-      needsReview: { count: 4, moneyOut: 89900, moneyIn: 12500 + 16000 + 150000 },
+      needsReview: { count: 2, moneyOut: 89900, moneyIn: 16000 },
     });
   });
 

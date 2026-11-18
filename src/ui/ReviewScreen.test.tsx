@@ -60,7 +60,7 @@ describe('ReviewScreen', () => {
   it('saves every group with its choice', async () => {
     const { onSave, user } = setup();
     await user.selectOptions(screen.getByRole('combobox', { name: 'Swish to EXEMPELBUTIKEN AB' }), C.shopping);
-    await user.click(screen.getByRole('button', { name: 'Save 2 of 6' }));
+    await user.click(screen.getByRole('button', { name: 'Save 4 of 6' }));
 
     const decisions = onSave.mock.calls[0]![0];
     expect(decisions).toHaveLength(6);
@@ -69,7 +69,7 @@ describe('ReviewScreen', () => {
       categoryId: C.shopping,
       remember: true,
     });
-    expect(decisions.filter((d: { categoryId: string | null }) => d.categoryId === null)).toHaveLength(4);
+    expect(decisions.filter((d: { categoryId: string | null }) => d.categoryId === null)).toHaveLength(2);
   });
 
   it('can turn "Remember" off and skip', async () => {
