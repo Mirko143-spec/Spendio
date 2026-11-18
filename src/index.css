@@ -1,13 +1,76 @@
 @import "tailwindcss";
 
-@theme {
-  --color-brand: #0f766e;
-}
-
+/*
+ * Design tokens. Palette from Swedish nature: snow, granite, pine, lingon, lichen, frost.
+ * Light/dark follow the system. Contrast (WCAG AA) checked for every text/background pair.
+ */
 :root {
   color-scheme: light dark;
+
+  --surface: #f7f9fa; /* snow */
+  --surface-raised: #ffffff;
+  --ink: #22292f; /* granite */
+  --ink-muted: #5b6a63; /* lichen, darkened for AA on snow (5.4:1) */
+  --line: #dde3e1; /* frost */
+  --accent: #1e5b4b; /* pine */
+  --accent-ink: #ffffff;
+  --danger: #b3263e; /* lingon */
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --surface: #14201d; /* night forest */
+    --surface-raised: #1b2925;
+    --ink: #e4ece8;
+    --ink-muted: #9db0a7;
+    --line: #2c3b37;
+    --accent: #6fc2a6;
+    --accent-ink: #0e1a17;
+    --danger: #f07a8a;
+  }
+}
+
+@theme inline {
+  --font-sans: "Hanken Grotesk Variable", ui-sans-serif, system-ui, sans-serif;
+
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-danger: var(--danger);
+
+  /* Type scale (classic 12 · 14 · 16 · 18 · 21 · 24 · 36). */
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.45;
+  --text-base: 1rem;
+  --text-base--line-height: 1.55;
+  --text-lg: 1.125rem;
+  --text-lg--line-height: 1.45;
+  --text-amount: 1.3125rem;
+  --text-amount--line-height: 1.2;
+  --text-title: 2.25rem;
+  --text-title--line-height: 1.1;
 }
 
 body {
-  @apply bg-white text-zinc-900 antialiased dark:bg-zinc-950 dark:text-zinc-100;
+  @apply bg-surface text-ink font-sans antialiased;
+}
+
+/* Visible keyboard focus everywhere; mouse clicks don't show it. */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
