@@ -2,7 +2,7 @@ import type { Account } from './account.ts';
 import type { Budget } from './budgets.ts';
 import { CATEGORY_IDS, type Category } from './categories.ts';
 import { COUNTRIES } from './country/index.ts';
-import type { CsvMapping } from './csv/mapping.ts';
+import { DATE_FORMATS, type CsvMapping } from './csv/mapping.ts';
 import type { ImportBatch, Transaction } from './import.ts';
 import type { Rule } from './rules.ts';
 import { SCHEMA_VERSION, type AppSettings } from './settings.ts';
@@ -170,7 +170,26 @@ export function parseBackup(text: string): Backup {
 
   const csvMappings = list(data, 'csvMappings');
   unique(csvMappings, 'id', 'data.csvMappings');
-  for (const m of csvMappings) check(isStr(m.headerSignature), `CSV mapping ${String(m.id)}`, 'is malformed');
+  for (const m of csvMappings) {
+    const where = `CSV mapping ${String(m.id)}`;
+    check(isStr(m.headerSignature) && isStr(m.name) && isStr(m.createdAt), where, 'is malformed');
+    check([',', ';', '\t', '|'].includes(m.delimiter as string), where, 'has an invalid delimiter');
+    check((DATE_FORMATS as readonly string[]).includes(m.dateFormat as string), where, 'has an invalid date format');
+    check(m.decimal === ',' || m.decimal === '.', where, 'has an invalid decimal separator');
+    const cols = m.columns as Obj;
+    const index = (v: unknown) => v === undefined || (isInt(v) && (v as number) >= 0);
+    check(
+      isObj(cols) &&
+        isInt(cols.date) &&
+        Array.isArray(cols.description) &&
+        (cols.description as unknown[]).length > 0 &&
+        (cols.description as unknown[]).every(index) &&
+        [cols.amount, cols.debit, cols.credit, cols.balance].every(index) &&
+        (cols.amount !== undefined || cols.debit !== undefined || cols.credit !== undefined),
+      where,
+      'has invalid columns',
+    );
+  }
 
   const s = data.settings;
   check(isObj(s), 'data.settings', 'must be an object');
