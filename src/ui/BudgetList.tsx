@@ -17,8 +17,9 @@ interface BudgetListProps {
 /** Budgets for the period: Over first, then Close, then On track; other spending below (docs/SPEC.md §12). */
 export function BudgetList({ model, categories, onSetLimit }: BudgetListProps) {
   const label = model.summary.period.label;
-  const shown = new Set([...model.budgeted, ...model.unbudgeted, ...model.moneyBack].map((r) => r.category.id));
-  const addable = categories.filter((c) => c.type === 'spending' && !shown.has(c.id));
+  // Only limits live here; spending without a limit is in the chart below, so it isn't repeated.
+  const budgetedIds = new Set(model.budgeted.map((r) => r.category.id));
+  const addable = categories.filter((c) => c.type === 'spending' && !budgetedIds.has(c.id));
 
   return (
     <section aria-labelledby="budgets-title">
@@ -40,19 +41,10 @@ export function BudgetList({ model, categories, onSetLimit }: BudgetListProps) {
         {model.budgeted.map((row) => (
           <CategoryLimitRow key={row.category.id} row={row} onSetLimit={onSetLimit} />
         ))}
-        {model.unbudgeted.map((row) => (
-          <CategoryLimitRow key={row.category.id} row={row} onSetLimit={onSetLimit} />
-        ))}
-        {model.moneyBack.map((row) => (
-          <li key={row.category.id} className="flex items-baseline justify-between gap-4 py-4">
-            <CategoryName category={row.category} />
-            <span className="flex items-baseline gap-2">
-              <Amount ore={-row.spent} />
-              <span className="text-sm text-ink-muted">back</span>
-            </span>
-          </li>
-        ))}
       </ul>
+      {model.budgeted.length === 0 && (
+        <p className="mt-4 text-sm text-ink-muted">No category limits yet. Choose a category below to set one.</p>
+      )}
 
       {addable.length > 0 && <AddLimit categories={addable} onSetLimit={onSetLimit} />}
     </section>
