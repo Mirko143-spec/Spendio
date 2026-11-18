@@ -86,3 +86,11 @@ describe('BudgetList', () => {
     expect(onSetLimit).toHaveBeenCalledWith(C.gaming, null);
   });
 });
+
+describe('BudgetList links', () => {
+  it('links rows to the matching transactions in the shown period', () => {
+    setup();
+    expect(screen.getByRole('link', { name: 'All spending' })).toHaveAttribute('href', '#/transactions?period=2026-11');
+    expect(screen.getByRole('link', { name: 'Gaming' })).toHaveAttribute('href', '#/transactions?category=gaming&period=2026-11');
+  });
+});

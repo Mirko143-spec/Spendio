@@ -84,3 +84,30 @@ export function wholeAmount(ore: number): string {
     maximumFractionDigits: 0,
   }).format(Math.round(ore / 100));
 }
+
+/** Plain-language names for transaction kinds (filters, details). */
+export const KIND_LABELS: Record<ReviewGroup['kind'], string> = {
+  card: 'Card purchases',
+  swish_out: 'Swish payments sent',
+  swish_in: 'Swish payments received',
+  swish_refund: 'Swish refunds',
+  autogiro: 'Direct debits',
+  deposit: 'Deposits',
+  other: 'Other',
+};
+
+/** One transaction's kind, for a details line ("12 Nov, card purchase"). */
+export const KIND_LABEL_ONE: Record<ReviewGroup['kind'], string> = {
+  card: 'card purchase',
+  swish_out: 'Swish sent',
+  swish_in: 'Swish received',
+  swish_refund: 'Swish refund',
+  autogiro: 'direct debit',
+  deposit: 'deposit',
+  other: 'other',
+};
+
+/** The merchant or person behind a transaction, as people would name them. */
+export function counterpartyName(t: { merchantDisplay: string; counterpartyIsPerson?: boolean }): string {
+  return t.counterpartyIsPerson ? tidyPersonName(t.merchantDisplay) : t.merchantDisplay;
+}

@@ -5,6 +5,7 @@ import { DEFAULT_CATEGORIES, type Category } from '../core/categories.ts';
 import { importCsv, type ImportBatch, type ImportResult, type Transaction } from '../core/import.ts';
 import type { Ore } from '../core/money.ts';
 import { payday, type PeriodLabel, type PeriodSettings } from '../core/periods.ts';
+import type { TransactionKind } from '../core/formats/types.ts';
 import type { ReviewDecision } from '../core/review.ts';
 import type { MatchOp, Rule } from '../core/rules.ts';
 import { DEFAULT_SETTINGS, SCHEMA_VERSION, type AppSettings } from '../core/settings.ts';
@@ -211,15 +212,44 @@ export class SpendioStore {
           .anyOf(d.transactionIds)
           .modify({ categoryId: d.categoryId, categorySource: 'manual', suggested: false });
         if (d.remember) {
-          const swish = d.kind === 'swish_out' || d.kind === 'swish_in' || d.kind === 'swish_refund';
-          await this.saveUserRule(
-            { op: 'equals', value: d.merchantKey, ...(swish ? { kind: d.kind } : {}), categoryId: d.categoryId },
-            context,
-          );
+          await this.saveUserRule(merchantRule(d.merchantKey, d.kind, d.categoryId), context);
           rulesSaved++;
         }
       }
       return { categorized, rulesSaved };
+    });
+  }
+
+  /**
+   * "This and future ones from <merchant>" (docs/SPEC.md §7.5): sets the transaction's category,
+   * saves a rule so future imports follow it, and with `includePast` also re-categorizes earlier
+   * transactions from the same merchant. Transactions the person categorized by hand are never
+   * touched. Returns how many transactions changed (including this one).
+   */
+  async applyCategoryToMerchant(
+    transactionId: string,
+    categoryId: string,
+    options: { includePast: boolean },
+    context: { now: string; newId: () => string },
+  ): Promise<number> {
+    const { db } = this;
+    return db.transaction('rw', db.transactions, db.rules, db.categories, async () => {
+      const t = await db.transactions.get(transactionId);
+      if (!t) throw new Error(`Unknown transaction: ${transactionId}`);
+      if (!(await db.categories.get(categoryId))) throw new Error(`Unknown category: ${categoryId}`);
+
+      const rule = merchantRule(t.merchantKey, t.kind, categoryId);
+      await this.saveUserRule(rule, context);
+
+      const change = { categoryId, categorySource: 'user_rule' as const, suggested: false };
+      await db.transactions.update(t.id, change);
+      if (!options.includePast) return 1;
+      const others = await db.transactions
+        .where('merchantKey')
+        .equals(t.merchantKey)
+        .filter((o) => o.id !== t.id && o.categorySource !== 'manual' && (!rule.kind || o.kind === rule.kind))
+        .modify(change);
+      return 1 + others;
     });
   }
 
@@ -381,4 +411,14 @@ export async function openStore(name: string = DEFAULT_DB_NAME): Promise<Spendio
   const db = new SpendioDB(name);
   await db.open();
   return new SpendioStore(db);
+}
+
+const SWISH_KINDS: ReadonlySet<TransactionKind> = new Set(['swish_out', 'swish_in', 'swish_refund']);
+
+/**
+ * The rule that remembers a merchant's category. For Swish it is limited to the direction
+ * (paying someone and being paid by them are different things); otherwise it matches any kind.
+ */
+function merchantRule(merchantKey: string, kind: TransactionKind, categoryId: string) {
+  return { op: 'equals' as const, value: merchantKey, ...(SWISH_KINDS.has(kind) ? { kind } : {}), categoryId };
 }

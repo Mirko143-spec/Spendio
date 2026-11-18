@@ -17,13 +17,13 @@ const model = (label: string) => buildDashboard(transactions, DEFAULT_CATEGORIES
 describe('SpendingChart', () => {
   it('ranks categories largest first, each announced with amount and share', () => {
     render(<SpendingChart model={model('2026-11')} />);
-    const bars = within(screen.getByRole('list', { name: 'Spending by category, largest first' })).getAllByRole('listitem');
+    const bars = within(screen.getByRole('list', { name: 'Spending by category, largest first' })).getAllByRole('link');
     expect(bars.map((b) => plain(b.getAttribute('aria-label')))).toEqual([
-      'Transport: 669 kr, 37 % of spending',
-      'Health & Fitness: 546 kr, 30 % of spending',
-      'Gaming: 329 kr, 18 % of spending',
-      'Restaurants & Cafés: 152 kr, 8 % of spending',
-      'Subscriptions: 129 kr, 7 % of spending',
+      'Transport: 669 kr, 37 % of spending. Show transactions',
+      'Health & Fitness: 546 kr, 30 % of spending. Show transactions',
+      'Gaming: 329 kr, 18 % of spending. Show transactions',
+      'Restaurants & Cafés: 152 kr, 8 % of spending. Show transactions',
+      'Subscriptions: 129 kr, 7 % of spending. Show transactions',
     ]);
   });
 
@@ -37,7 +37,7 @@ describe('SpendingChart', () => {
 
   it('shows the share on hover and keyboard focus', () => {
     render(<SpendingChart model={model('2026-11')} />);
-    const [first, second] = screen.getAllByRole('listitem');
+    const [first, second] = screen.getAllByRole('link');
     fireEvent.pointerEnter(first!);
     expect(screen.getByRole('tooltip')).toHaveTextContent('37 % of spending');
     fireEvent.pointerLeave(first!);
@@ -57,5 +57,12 @@ describe('SpendingChart', () => {
   it('says so when nothing was spent', () => {
     render(<SpendingChart model={model('2027-06')} />);
     expect(screen.getByText('Nothing spent in this period.')).toBeInTheDocument();
+  });
+});
+
+describe('SpendingChart links', () => {
+  it('links each bar to that category’s transactions in the shown period', () => {
+    render(<SpendingChart model={model('2026-11')} />);
+    expect(screen.getAllByRole('link')[0]).toHaveAttribute('href', '#/transactions?category=transport&period=2026-11');
   });
 });
