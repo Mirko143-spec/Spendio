@@ -118,10 +118,10 @@ function LimitRow({
 
       {progress && (
         <>
-          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-line" aria-hidden="true">
+          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-chart-mark/15" aria-hidden="true">
             <div
               className={`h-full rounded-full ${
-                progress.status === 'over' ? 'bg-danger' : progress.status === 'close' ? 'bg-ink' : 'bg-accent'
+                progress.status === 'over' ? 'bg-danger' : progress.status === 'close' ? 'bg-ink' : 'bg-chart-mark'
               }`}
               style={{ width: `${Math.min(100, Math.round(progress.ratio * 100))}%` }}
             />
