@@ -183,6 +183,8 @@ A user's manual category on a single transaction (`categorySource = 'manual'`) i
 - In review: category per merchant group + **"Remember for future imports"** (checked by default; **unchecked by default for Swish to or from people**). Remember = create a user `equals` rule on `merchantKey` (+ `kind` for Swish).
 - A category chosen in review is stored as the user's own (`categorySource = 'manual'`). Keeping a pre-filled suggestion confirms it; clearing one sends the group back to Needs review; groups left untouched (including unconfirmed suggestions) stay in review. All decisions from one review are saved in a single storage transaction.
 - Editing a single transaction later offers **"Only this one"** or **"This and future ones from <merchant>"**, plus an option to apply to past uncategorized/rule-assigned transactions from that merchant. Manual assignments are never touched.
+  - "Only this one" stores the choice as `manual`. "All from <merchant>" saves a user `equals` rule (limited to the Swish direction for Swish), sets this transaction to `user_rule`, and — with "also change earlier ones", ticked by default — re-categorizes every other non-manual transaction from that merchant, all in one storage transaction.
+  - Setting a transaction back to Needs review only ever affects that one transaction.
 
 ## 8. Import pipeline
 
