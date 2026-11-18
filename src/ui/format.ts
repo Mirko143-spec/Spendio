@@ -66,3 +66,21 @@ export function listNames(names: readonly string[]): string {
   if (names.length <= 1) return names[0] ?? '';
   return `${names.slice(0, -1).join(', ')} and ${names.at(-1)}`;
 }
+
+const monthLong = new Intl.DateTimeFormat('en-GB', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+const monthShort = new Intl.DateTimeFormat('en-GB', { month: 'short', timeZone: 'UTC' });
+
+/** "2026-11" → "November 2026" (or "Nov" when short). */
+export function periodName(label: string, short = false): string {
+  const date = new Date(`${label}-01T00:00:00Z`);
+  return (short ? monthShort : monthLong).format(date);
+}
+
+/** Whole currency amount in the country's format, e.g. 1200000 öre → "12 000 kr". */
+export function wholeAmount(ore: number): string {
+  return new Intl.NumberFormat(DEFAULT_COUNTRY.locale, {
+    style: 'currency',
+    currency: DEFAULT_COUNTRY.currency,
+    maximumFractionDigits: 0,
+  }).format(Math.round(ore / 100));
+}

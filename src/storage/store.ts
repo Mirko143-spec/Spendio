@@ -96,6 +96,10 @@ export class SpendioStore {
 
   // ── Transactions ───────────────────────────────────────────────────────────
 
+  countTransactions(): Promise<number> {
+    return this.db.transactions.count();
+  }
+
   /** Transactions by effective date (oldest first), optionally limited to a date range. */
   listTransactions(range?: DateRange): Promise<Transaction[]> {
     const byDate = this.db.transactions.orderBy('effectiveDate');

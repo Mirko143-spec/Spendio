@@ -233,13 +233,13 @@ A user's manual category on a single transaction (`categorySource = 'manual'`) i
 ## 12. Screens
 
 ### Dashboard (selected period)
-1. Period switcher `‹ November | December | January ›` with date range
-2. Headline numbers: **Spent** (with % change vs previous period) · **Budget left** (overall limit − spent; red if over) · **Left over**
-3. **Budget list**: budgeted categories sorted Over → Close → On track (then by ratio), progress bar, `spent / limit`, status; unbudgeted categories below without bars
-4. **Spending by category**: horizontal bar chart
-5. **Needs review** badge (only when > 0)
+1. Period switcher `‹ Oct   November 2026   Dec ›` with the period's real dates (e.g. "23 Oct – 24 Nov"), limited to the first period with data and today's period. Opens on today's period if it has transactions, otherwise on the latest period that does.
+2. **Needs review** notice (only when > 0), near the top because it explains incomplete totals; links to the review screen.
+3. Headline numbers: **Spent** (with % change vs the previous period) · **Budget left** (overall limit − net spending; "Over budget by …" in the warning color) · **Left over** (with savings rate).
+4. **Budgets**: "All spending" (the overall limit) first, then only categories *with* a limit, sorted Over → Close → On track (then by ratio), with a meter bar, `spent of limit` and the status spelled out in text ("Over by 29 kr", "84 % used, 131 kr left"). Limits are set, changed or removed inline; a picker offers every spending category without a limit. A change applies from the shown period on. Spending without a limit isn't repeated here — it's in the chart.
+5. **Spending by category**: ranked horizontal bars, largest first, one hue, value at the tip, share of spending on hover/focus. Money back (e.g. Swish from people) is noted under the chart, not drawn as a bar.
 
-Clicking a category anywhere → Transactions filtered by that category and period.
+Clicking a category anywhere → Transactions filtered by that category and period (once the Transactions page exists).
 
 ### Other pages
 - **Upload** (file picker + drag and drop; supported banks listed from the format registry; clear errors for unsupported, empty or oversized files) → **Import summary** (new / already imported / lines that couldn't be read, with line numbers) → **Review** (one group per merchant *and* kind, so "Swish to Anna" and "Swish from Anna" are separate decisions; sorted by absolute total; category dropdown pre-filled with any suggestion + "Remember" checkbox; "Skip for now"). Until the dashboard exists, the flow ends on a "Saved on this device" screen.
@@ -255,6 +255,7 @@ Clicking a category anywhere → Transactions filtered by that category and peri
 - **Palette (from Swedish nature):** snow `#f7f9fa` background, granite `#22292f` text, pine `#1e5b4b` accent, lingon `#b3263e` only for warnings, lichen `#5b6a63` secondary text, frost `#dde3e1` dividers; a night-forest dark mode. Money in is pine with `+`; money out stays neutral (spending isn't an error). Every text/background pair meets WCAG AA.
 - **Type:** Hanken Grotesk only, self-hosted (the CSP blocks font CDNs); its default figures are tabular.
 - **Layout:** one left-aligned column (max 44rem), dividers only where they separate items, no card stacks, no all-caps labels. Responsive to 390 px, visible keyboard focus, reduced motion respected.
+- **Charts:** follow the dataviz method — form first (comparing parts → ranked bars, one hue), plain HTML so labels are real text, direct value labels, hover *and* focus tooltips, no legend for a single series. Data marks use `--chart-mark` (`#008362` light / `#339e7c` dark): the pine accent itself is too dark and gray for a mark, so this is the pine hue re-stepped to pass the palette validator (OKLCH lightness band, chroma ≥ 0.10, ≥ 3:1 vs surface) in both modes. Meter tracks are the same hue at 15 %.
 
 ## 13. Data model (TypeScript, core)
 
@@ -316,12 +317,17 @@ src/
     summary.ts         period aggregates (spent, income, left over, savings, needs review)
     import.ts          pure import pipeline, Transaction + ImportBatch types
     review.ts          groupForReview + ReviewDecision
+    dashboard.ts       buildDashboard: budget rows, overall limit, change vs previous period
+    period-nav.ts      which periods to offer and which to open on
     names.ts           tidy person names for display
     account.ts, settings.ts, backup.ts
   storage/           the ONLY module that touches IndexedDB (Dexie); encryption is added here in v1.1
-    db.ts              schema v1 + first-run defaults
+    db.ts              schema (v2: adds Swish from people to older databases) + first-run defaults
     store.ts           SpendioStore: the API the UI uses (atomic import, edits, rules, budgets, backup)
-  ui/                React screens + components (App flow, UploadScreen, ImportSummary, ReviewScreen, Amount, format.ts)
+  ui/                React components (Amount, PeriodSwitcher, Headlines, BudgetList, SpendingChart, UploadScreen, ImportSummary, ReviewScreen, format.ts)
+    App.tsx            shell + navigation; hash routes #/ (overview), #/add, #/review (router.ts, no router library)
+    pages/             OverviewPage, AddStatementPage, ReviewPage
+    StoreContext.tsx, useStore.ts   opens the store once and shares it
     dev/               dev-only previews (dropped from production builds)
 .claude/skills/      project skills: frontend-design, webapp-testing (Anthropic, Apache-2.0)
 fixtures/            synthetic CSVs only (fake names, no personnummer)

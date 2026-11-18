@@ -15,6 +15,8 @@
   --accent: #1e5b4b; /* pine */
   --accent-ink: #ffffff;
   --danger: #b3263e; /* lingon */
+  /* Data marks (bars, meters): pine family, validated by the dataviz palette checks (OKLCH L/C, contrast). */
+  --chart-mark: #008362;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -27,6 +29,7 @@
     --accent: #6fc2a6;
     --accent-ink: #0e1a17;
     --danger: #f07a8a;
+    --chart-mark: #339e7c;
   }
 }
 
@@ -41,6 +44,7 @@
   --color-accent: var(--accent);
   --color-accent-ink: var(--accent-ink);
   --color-danger: var(--danger);
+  --color-chart-mark: var(--chart-mark);
 
   /* Type scale (classic 12 · 14 · 16 · 18 · 21 · 24 · 36). */
   --text-sm: 0.875rem;
