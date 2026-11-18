@@ -248,6 +248,12 @@ Clicking a category anywhere → Transactions filtered by that category and peri
 - **Categories & Rules**: edit categories, colors and limits; list/delete user rules; view built-in rules
 - **Settings**: period start day, export/import backup, wipe all data, (v1.1) passcode
 
+### Visual design
+- **Idea:** a bank export is a cramped wall of semicolons; Spendio is calm, airy and precise. The memorable element is the **amounts**: large tabular figures in Swedish format, currency lighter, right-aligned like a ledger. Everything else stays quiet.
+- **Palette (from Swedish nature):** snow `#f7f9fa` background, granite `#22292f` text, pine `#1e5b4b` accent, lingon `#b3263e` only for warnings, lichen `#5b6a63` secondary text, frost `#dde3e1` dividers; a night-forest dark mode. Money in is pine with `+`; money out stays neutral (spending isn't an error). Every text/background pair meets WCAG AA.
+- **Type:** Hanken Grotesk only, self-hosted (the CSP blocks font CDNs); its default figures are tabular.
+- **Layout:** one left-aligned column (max 44rem), dividers only where they separate items, no card stacks, no all-caps labels. Responsive to 390 px, visible keyboard focus, reduced motion respected.
+
 ## 13. Data model (TypeScript, core)
 
 ```ts
