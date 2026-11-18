@@ -95,3 +95,19 @@ export const KIND_LABELS: Record<ReviewGroup['kind'], string> = {
   deposit: 'Deposits',
   other: 'Other',
 };
+
+/** One transaction's kind, for a details line ("12 Nov, card purchase"). */
+export const KIND_LABEL_ONE: Record<ReviewGroup['kind'], string> = {
+  card: 'card purchase',
+  swish_out: 'Swish sent',
+  swish_in: 'Swish received',
+  swish_refund: 'Swish refund',
+  autogiro: 'direct debit',
+  deposit: 'deposit',
+  other: 'other',
+};
+
+/** The merchant or person behind a transaction, as people would name them. */
+export function counterpartyName(t: { merchantDisplay: string; counterpartyIsPerson?: boolean }): string {
+  return t.counterpartyIsPerson ? tidyPersonName(t.merchantDisplay) : t.merchantDisplay;
+}
