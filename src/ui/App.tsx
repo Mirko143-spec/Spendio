@@ -4,6 +4,7 @@ import { CategoriesPage } from './pages/CategoriesPage.tsx';
 import { HistoryPage } from './pages/HistoryPage.tsx';
 import { OverviewPage } from './pages/OverviewPage.tsx';
 import { ReviewPage } from './pages/ReviewPage.tsx';
+import { SavingsPage } from './pages/SavingsPage.tsx';
 import { TransactionsPage } from './pages/TransactionsPage.tsx';
 import { hrefFor, navigate, useRoute, type Route } from './router.ts';
 import { StoreProvider } from './StoreContext.tsx';
@@ -16,6 +17,7 @@ const NAV: { route: Route; label: string }[] = [
   { route: 'overview', label: 'Overview' },
   { route: 'transactions', label: 'Transactions' },
   { route: 'history', label: 'History' },
+  { route: 'savings', label: 'Savings' },
   { route: 'categories', label: 'Categories' },
   { route: 'add', label: 'Add statement' },
 ];
@@ -86,6 +88,7 @@ function Pages() {
       {route === 'review' && <ReviewPage />}
       {route === 'transactions' && <TransactionsPage />}
       {route === 'history' && <HistoryPage />}
+      {route === 'savings' && <SavingsPage />}
       {route === 'categories' && <CategoriesPage />}
     </AppShell>
   );
