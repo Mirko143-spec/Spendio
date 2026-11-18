@@ -113,3 +113,20 @@ describe('importCsv with an unsupported file', () => {
     expect(await store.listImportBatches()).toEqual([]);
   });
 });
+
+describe('accounts', () => {
+  it('creates the bank account on the first import, once', async () => {
+    await using store = await freshStore();
+    expect(await store.listAccounts()).toEqual([]);
+    await store.importCsv(fixture, context('2026-12-29T10:00:00.000Z'));
+    await store.importCsv(fixture, context('2026-12-30T10:00:00.000Z'));
+    expect(await store.listAccounts()).toEqual([{ id: 'account:nordea', bank: 'nordea', name: 'Nordea' }]);
+    expect(new Set((await store.listTransactions()).map((t) => t.accountId))).toEqual(new Set(['account:nordea']));
+  });
+
+  it('creates no account when an import adds nothing', async () => {
+    await using store = await freshStore();
+    await store.importCsv(fixture.split('\n')[0]!, context());
+    expect(await store.listAccounts()).toEqual([]);
+  });
+});

@@ -1,4 +1,4 @@
-import { DEFAULT_ACCOUNT, type Account } from '../core/account.ts';
+import type { Account } from '../core/account.ts';
 import { setLimit, type Budget } from '../core/budgets.ts';
 import { createBackup, type Backup } from '../core/backup.ts';
 import { DEFAULT_CATEGORIES, type Category } from '../core/categories.ts';
@@ -13,7 +13,6 @@ export interface ImportContext {
   /** ISO timestamp of the import. */
   now: string;
   newId: () => string;
-  accountId?: string;
 }
 
 export interface DateRange {
@@ -61,17 +60,17 @@ export class SpendioStore {
    */
   importCsv(text: string, context: ImportContext): Promise<ImportResult> {
     const { db } = this;
-    return db.transaction('rw', db.transactions, db.importBatches, db.rules, async () => {
+    return db.transaction('rw', db.transactions, db.importBatches, db.rules, db.accounts, async () => {
       const existingFingerprints = new Set(await db.transactions.orderBy('fingerprint').keys()) as Set<string>;
       const userRules = await db.rules.toArray();
       const result = importCsv(text, {
-        accountId: context.accountId ?? DEFAULT_ACCOUNT.id,
         existingFingerprints,
         userRules,
         now: context.now,
         newId: context.newId,
       });
       if (result.transactions.length > 0) {
+        if (!(await db.accounts.get(result.account.id))) await db.accounts.add(result.account);
         await db.importBatches.add(result.batch);
         await db.transactions.bulkAdd(result.transactions);
       }
@@ -306,7 +305,6 @@ export class SpendioStore {
     const { db } = this;
     await db.transaction('rw', db.tables, async () => {
       await Promise.all(db.tables.map((t) => t.clear()));
-      await db.accounts.add(DEFAULT_ACCOUNT);
       await db.categories.bulkAdd([...DEFAULT_CATEGORIES]);
       await db.settings.add({ key: 'app', ...DEFAULT_SETTINGS });
     });

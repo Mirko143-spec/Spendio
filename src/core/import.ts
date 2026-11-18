@@ -1,3 +1,4 @@
+import { accountForFormat, type Account } from './account.ts';
 import { categorize, type CategorySource } from './categorize.ts';
 import type { RowError } from './csv/types.ts';
 import { dedupRows } from './dedup.ts';
@@ -51,7 +52,6 @@ export interface ImportBatch {
 }
 
 export interface ImportOptions {
-  accountId: string;
   existingFingerprints: ReadonlySet<string>;
   userRules?: readonly Rule[];
   /** ISO timestamp of the import. */
@@ -64,6 +64,8 @@ export interface ImportOptions {
 export interface ImportResult {
   /** The bank format that recognized the file. */
   format: Pick<BankFormat, 'id' | 'name' | 'country'>;
+  /** The account the transactions belong to; the caller creates it if it doesn't exist yet. */
+  account: Account;
   batch: ImportBatch;
   /** New transactions only, in file order. */
   transactions: Transaction[];
@@ -79,9 +81,11 @@ export class UnsupportedFormatError extends Error {
 }
 
 export function importCsv(text: string, options: ImportOptions): ImportResult {
-  const { accountId, existingFingerprints, userRules = [], now, newId, formats = BANK_FORMATS } = options;
+  const { existingFingerprints, userRules = [], now, newId, formats = BANK_FORMATS } = options;
   const format = detectFormat(text, formats);
   if (!format) throw new UnsupportedFormatError();
+  const account = accountForFormat(format);
+  const accountId = account.id;
   const { rows, errors } = format.parse(text);
   const { fresh, duplicateCount } = dedupRows(accountId, rows, existingFingerprints);
   const batchId = newId();
@@ -114,6 +118,7 @@ export function importCsv(text: string, options: ImportOptions): ImportResult {
 
   return {
     format: { id: format.id, name: format.name, country: format.country },
+    account,
     batch: {
       id: batchId,
       accountId,

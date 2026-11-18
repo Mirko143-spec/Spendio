@@ -1,7 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_ACCOUNT } from '../core/account.ts';
 import { parseBackup, serializeBackup, type Backup } from '../core/backup.ts';
 import { CATEGORY_IDS as C, DEFAULT_CATEGORIES } from '../core/categories.ts';
 import { DEFAULT_SETTINGS } from '../core/settings.ts';
@@ -90,7 +89,7 @@ describe('wipeAll', () => {
     expect(await store.listImportBatches()).toEqual([]);
     expect(await store.listUserRules()).toEqual([]);
     expect(await store.listBudgets()).toEqual([]);
-    expect(await store.listAccounts()).toEqual([DEFAULT_ACCOUNT]);
+    expect(await store.listAccounts()).toEqual([]);
     expect(await store.listCategories()).toHaveLength(DEFAULT_CATEGORIES.length);
     expect(await store.getSettings()).toEqual(DEFAULT_SETTINGS);
   });

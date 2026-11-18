@@ -13,7 +13,6 @@ const fixture = readFileSync(join(import.meta.dirname, '../../fixtures/nordea-sa
 function options(overrides: Partial<ImportOptions> = {}): ImportOptions {
   let seq = 0;
   return {
-    accountId: 'nordea-personkonto',
     existingFingerprints: new Set(),
     now: '2026-12-29T10:00:00.000Z',
     newId: () => `id-${++seq}`,
@@ -26,12 +25,13 @@ describe('importCsv', () => {
 
   it('reports which bank format recognized the file', () => {
     expect(result.format).toEqual({ id: 'nordea', name: 'Nordea', country: 'SE' });
+    expect(result.account).toEqual({ id: 'account:nordea', bank: 'nordea', name: 'Nordea' });
   });
 
   it('produces a batch summary', () => {
     expect(result.batch).toEqual({
       id: 'id-1',
-      accountId: 'nordea-personkonto',
+      accountId: 'account:nordea',
       label: 'Nordea · 2026-12-29',
       importedAt: '2026-12-29T10:00:00.000Z',
       rowCount: 28,
@@ -46,7 +46,7 @@ describe('importCsv', () => {
     const parkster = result.transactions.find((t) => t.merchantKey === 'PARKSTER SWE');
     expect(parkster).toEqual({
       id: expect.any(String),
-      accountId: 'nordea-personkonto',
+      accountId: 'account:nordea',
       importBatchId: 'id-1',
       fingerprint: expect.any(String),
       bookingDate: '2026-11-25',

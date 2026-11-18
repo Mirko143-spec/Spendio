@@ -109,7 +109,7 @@ export function parseBackup(text: string): Backup {
 
   const accounts = list(data, 'accounts');
   const accountIds = unique(accounts, 'id', 'data.accounts');
-  for (const a of accounts) check(isStr(a.name) && (a.bank === 'nordea' || a.bank === 'generic'), `account ${String(a.id)}`, 'is malformed');
+  for (const a of accounts) check(isStr(a.name) && isStr(a.bank) && a.bank.length > 0, `account ${String(a.id)}`, 'is malformed');
 
   const categories = list(data, 'categories');
   const categoryIds = unique(categories, 'id', 'data.categories');
