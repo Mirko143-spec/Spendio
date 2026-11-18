@@ -60,19 +60,23 @@ export function BackupSection({ onExport, onRestore }: BackupSectionProps) {
         >
           Download backup
         </button>
-        <label htmlFor={`${id}-file`} className="cursor-pointer font-medium text-accent hover:underline">
-          Restore from a backup file
-        </label>
+        {/* Hidden input first, so its label shows the keyboard focus ring (Tailwind `peer`). */}
         <input
           id={`${id}-file`}
           type="file"
           accept=".json,application/json"
-          className="sr-only"
+          className="peer sr-only"
           onChange={(e) => {
             void choose(e.target.files?.[0]);
             e.target.value = '';
           }}
         />
+        <label
+          htmlFor={`${id}-file`}
+          className="cursor-pointer rounded font-medium text-accent hover:underline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent"
+        >
+          Restore from a backup file
+        </label>
       </div>
 
       {pending && (

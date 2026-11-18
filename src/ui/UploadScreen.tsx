@@ -69,23 +69,25 @@ export function UploadScreen({ onImport }: UploadScreenProps) {
           dragging ? 'border-accent bg-surface-raised' : 'border-line'
         }`}
       >
-        <label
-          htmlFor={inputId}
-          className={`cursor-pointer rounded-lg bg-accent px-5 py-2.5 font-semibold text-accent-ink ${busy ? 'opacity-40' : ''}`}
-        >
-          {busy ? 'Reading file…' : 'Choose a CSV file'}
-        </label>
+        {/* The input is visually hidden; its label is the button. The input comes first so the label
+            can show the keyboard focus ring when the input is focused (Tailwind `peer`). */}
         <input
           id={inputId}
           type="file"
           accept=".csv,text/csv"
           disabled={busy}
-          className="sr-only"
+          className="peer sr-only"
           onChange={(e) => {
             void handle(e.target.files?.[0]);
             e.target.value = '';
           }}
         />
+        <label
+          htmlFor={inputId}
+          className={`cursor-pointer rounded-lg bg-accent px-5 py-2.5 font-semibold text-accent-ink peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent ${busy ? 'opacity-40' : ''}`}
+        >
+          {busy ? 'Reading file…' : 'Choose a CSV file'}
+        </label>
         <p className="text-sm text-ink-muted">or drop it here. Works with CSV exports from {SUPPORTED_BANKS}.</p>
       </div>
 
