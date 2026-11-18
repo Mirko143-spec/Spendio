@@ -313,18 +313,22 @@ src/
     budgets.ts         limits with effectiveFrom, status
     summary.ts         period aggregates (spent, income, left over, savings, needs review)
     import.ts          pure import pipeline, Transaction + ImportBatch types
+    review.ts          groupForReview + ReviewDecision
+    names.ts           tidy person names for display
     account.ts, settings.ts, backup.ts
   storage/           the ONLY module that touches IndexedDB (Dexie); encryption is added here in v1.1
     db.ts              schema v1 + first-run defaults
     store.ts           SpendioStore: the API the UI uses (atomic import, edits, rules, budgets, backup)
-  ui/                React pages + components
+  ui/                React screens + components (App flow, UploadScreen, ImportSummary, ReviewScreen, Amount, format.ts)
+    dev/               dev-only previews (dropped from production builds)
+.claude/skills/      project skills: frontend-design, webapp-testing (Anthropic, Apache-2.0)
 fixtures/            synthetic CSVs only (fake names, no personnummer)
 docker/              nginx.conf, security-headers.conf
 Dockerfile, compose.yaml
 ```
 
 ### Stack
-Vite + React + TypeScript · Tailwind CSS · Dexie (IndexedDB) · Papa Parse · Recharts · Vitest. Keep dependencies minimal; add new ones only with a reason.
+Vite + React + TypeScript · Tailwind CSS · Dexie (IndexedDB) · Papa Parse · Recharts · Hanken Grotesk via Fontsource (self-hosted) · Vitest, with fake-indexeddb for storage tests and Testing Library + jsdom for component tests (`*.test.tsx`, opted in per file). Keep dependencies minimal; add new ones only with a reason.
 
 ### Backup format
 ```json
