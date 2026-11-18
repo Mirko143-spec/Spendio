@@ -320,11 +320,12 @@ src/
       types.ts           BankFormat interface, TransactionKind, Described
       index.ts           registry (BANK_FORMATS) + detectFormat
       nordea/            parse.ts (CSV), describe.ts (Rubrik → kind, dates), index.ts (NORDEA)
+      generic.ts         a saved CsvMapping as a BankFormat (bank-neutral description reading)
     country/           country specifics; bank-neutral code reaches them only via index.ts
       types.ts           Country interface
       index.ts           registry (COUNTRIES), DEFAULT_COUNTRY, countryFor
       se/                Sweden: holidays.ts, personnummer.ts, builtin-rules.ts, business.ts, index.ts (SWEDEN)
-    csv/               types.ts (ParsedRow, ParseResult), mapping.ts (generic mapper type; generic.ts in step 6)
+    csv/               types.ts (ParsedRow, ParseResult), mapping.ts (CsvMapping), date-formats.ts, sniff.ts (detect + guess), generic.ts (parse with a mapping)
     money.ts           amount parsing (minor units) + formatting in the country's currency
     dates.ts           UTC calendar-date helpers
     merchant.ts        merchant name cleanup
@@ -348,7 +349,7 @@ src/
   storage/           the ONLY module that touches IndexedDB (Dexie); encryption is added here in v1.1
     db.ts              schema (v2: adds Swish from people to older databases) + first-run defaults
     store.ts           SpendioStore: the API the UI uses (atomic import, edits, rules, budgets, backup)
-  ui/                React components (Amount, PeriodSwitcher, Headlines, BudgetList, SpendingChart, TransactionFilters, TransactionList, HistoryTable, ColumnChart, PeriodWindow (+ period-window.ts), CategoryEditor, CategoryLimit, DeleteCategory, RulesList, LimitForm, PeriodSettingsForm, BackupSection, ImportsSection, DeleteAllData, download.ts, UploadScreen, ImportSummary, ReviewScreen, format.ts)
+  ui/                React components (Amount, PeriodSwitcher, Headlines, BudgetList, SpendingChart, TransactionFilters, TransactionList, HistoryTable, ColumnChart, PeriodWindow (+ period-window.ts), CategoryEditor, CategoryLimit, DeleteCategory, RulesList, LimitForm, PeriodSettingsForm, BackupSection, ImportsSection, FileLayoutsSection, DeleteAllData, CsvMapper, download.ts, UploadScreen, ImportSummary, ReviewScreen, format.ts)
     App.tsx            shell + navigation; hash routes #/, #/transactions, #/history, #/savings, #/categories, #/add, #/settings, #/review with query params for page state (router.ts, no router library)
     pages/             OverviewPage, TransactionsPage, HistoryPage, SavingsPage, CategoriesPage, AddStatementPage, SettingsPage, ReviewPage
     StoreContext.tsx, useStore.ts   opens the store once and shares it
