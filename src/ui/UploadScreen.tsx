@@ -15,7 +15,7 @@ interface UploadScreenProps {
 
 function errorMessage(error: unknown): string {
   if (error instanceof UnsupportedFormatError) {
-    return `Spendio can’t read this file yet. It reads CSV exports from ${SUPPORTED_BANKS}, so check that you exported your transactions as CSV rather than PDF.`;
+    return `This doesn’t look like a bank statement export. Spendio reads CSV files with one transaction per row, so check that you exported your transactions as CSV rather than PDF.`;
   }
   return `This file couldn’t be imported: ${error instanceof Error ? error.message : String(error)}`;
 }
@@ -88,7 +88,7 @@ export function UploadScreen({ onImport }: UploadScreenProps) {
         >
           {busy ? 'Reading file…' : 'Choose a CSV file'}
         </label>
-        <p className="text-sm text-ink-muted">or drop it here. Works with CSV exports from {SUPPORTED_BANKS}.</p>
+        <p className="text-sm text-ink-muted">or drop it here. {SUPPORTED_BANKS} files import directly; for other banks you set up the layout once.</p>
       </div>
 
       {error && (

@@ -28,7 +28,7 @@ describe('UploadScreen', () => {
     render(<UploadScreen onImport={onImport} />);
     const input = screen.getByLabelText('Choose a CSV file');
     await userEvent.upload(input, csv('Date,Amount\n'));
-    expect(await screen.findByRole('alert')).toHaveTextContent('Spendio can’t read this file yet');
+    expect(await screen.findByRole('alert')).toHaveTextContent('This doesn’t look like a bank statement export');
 
     await userEvent.upload(input, csv('Bokföringsdag;Belopp\n'));
     await vi.waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument());
