@@ -121,7 +121,9 @@ Merchant names are often truncated by the bank at ~20 characters (`STIFTELSEN TE
 
 ## 6. Categories
 
-Flat, user-editable (rename, add, delete, color). Deleting a category requires choosing where its transactions and rules move.
+Flat, user-editable (rename, add, delete, color). Deleting a category requires choosing where its transactions and rules move. Categories are listed alphabetically (Swedish collation) everywhere.
+
+When a default category is deleted, the built-in rules and default suggestions that point at it stop applying: matching transactions go to Needs review instead of to a category that no longer exists. (A merchant a built-in rule knows still counts as a business for Swish.)
 
 Each category has a `type`:
 - `spending`: counts toward spending totals and budgets
