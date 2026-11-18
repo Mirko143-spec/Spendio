@@ -30,6 +30,13 @@ describe('useRoute / useRouteParams', () => {
     expect(result.current.params.get('category')).toBe('gaming');
   });
 
+  it('reads the welcome page', () => {
+    window.location.hash = '#/welcome';
+    const { result } = renderHook(() => useRoute());
+    expect(result.current).toBe('welcome');
+    expect(hrefFor('welcome')).toBe('#/welcome');
+  });
+
   it('treats unknown paths as the overview', () => {
     window.location.hash = '#/nope';
     const { result } = renderHook(() => useRoute());
