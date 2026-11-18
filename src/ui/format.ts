@@ -1,4 +1,5 @@
 import { DEFAULT_COUNTRY } from '../core/country/index.ts';
+import { tidyPersonName } from '../core/names.ts';
 import type { ReviewGroup } from '../core/review.ts';
 
 /** Amount split for display: sign, number and currency, e.g. ["+", "1 500,00", "kr"]. */
@@ -28,14 +29,15 @@ export function dateRange(first: string, last: string): string {
 }
 
 /** How a review group is named for the person reading it. */
-export function groupTitle(group: Pick<ReviewGroup, 'kind' | 'merchantDisplay'>): string {
+export function groupTitle(group: Pick<ReviewGroup, 'kind' | 'merchantDisplay'> & { isPerson?: boolean }): string {
+  const name = group.isPerson ? tidyPersonName(group.merchantDisplay) : group.merchantDisplay;
   switch (group.kind) {
     case 'swish_out':
-      return `Swish to ${group.merchantDisplay}`;
+      return `Swish to ${name}`;
     case 'swish_in':
-      return `Swish from ${group.merchantDisplay}`;
+      return `Swish from ${name}`;
     case 'swish_refund':
-      return `Swish refund from ${group.merchantDisplay}`;
+      return `Swish refund from ${name}`;
     case 'autogiro':
       return `Direct debit to ${group.merchantDisplay}`;
     default:

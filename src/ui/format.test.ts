@@ -37,3 +37,12 @@ describe('groupTitle / groupContext', () => {
     );
   });
 });
+
+describe('groupTitle for people', () => {
+  it('tidies person names but leaves businesses as the bank wrote them', () => {
+    expect(groupTitle({ kind: 'swish_in', merchantDisplay: 'DOE,JOHN', isPerson: true })).toBe('Swish from John Doe');
+    expect(groupTitle({ kind: 'swish_out', merchantDisplay: 'EXEMPELBUTIKEN AB', isPerson: false })).toBe(
+      'Swish to EXEMPELBUTIKEN AB',
+    );
+  });
+});

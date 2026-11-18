@@ -29,11 +29,11 @@ describe('ReviewScreen', () => {
     const { rows } = setup();
     expect(screen.getByRole('heading', { name: 'Review 6 transactions' })).toBeInTheDocument();
     expect(rows.map((r) => r.querySelector('p')!.textContent)).toEqual([
-      'Swish from DOE,JOHN',
+      'Swish from John Doe',
       'Swish to EXEMPELBUTIKEN AB',
-      'Swish to ANNA TESTSSON',
+      'Swish to Anna Testsson',
       'Swish refund from STIFTELSEN EXEMPELHUSET',
-      'Swish from ANNA TESTSSON',
+      'Swish from Anna Testsson',
       'EXEMPELSHOP',
     ]);
     expect(within(rows[0]!).getByText('1 payment, 12 Nov')).toBeInTheDocument();
@@ -48,9 +48,9 @@ describe('ReviewScreen', () => {
 
   it('pre-fills suggestions and leaves "Remember" off for people', () => {
     setup();
-    expect(screen.getByRole('combobox', { name: 'Swish to ANNA TESTSSON' })).toHaveValue(C.swishPeople);
+    expect(screen.getByRole('combobox', { name: 'Swish to Anna Testsson' })).toHaveValue(C.swishPeople);
     const [toPerson, toShop] = [
-      screen.getByRole('combobox', { name: 'Swish to ANNA TESTSSON' }).closest('li')!,
+      screen.getByRole('combobox', { name: 'Swish to Anna Testsson' }).closest('li')!,
       screen.getByRole('combobox', { name: 'Swish to EXEMPELBUTIKEN AB' }).closest('li')!,
     ];
     expect(within(toPerson).getByRole('checkbox', { name: 'Remember for future imports' })).not.toBeChecked();
