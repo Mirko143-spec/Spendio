@@ -12,6 +12,7 @@ import { CategoryEditor } from '../CategoryEditor.tsx';
 import { CategoryLimit } from '../CategoryLimit.tsx';
 import { DeleteCategory } from '../DeleteCategory.tsx';
 import { RulesList } from '../RulesList.tsx';
+import { loadWhileMounted } from '../load.ts';
 import { useStore } from '../useStore.ts';
 
 interface Data {
@@ -41,15 +42,7 @@ export function CategoriesPage() {
   const [data, setData] = useState<Data | null>(null);
   const [version, setVersion] = useState(0);
 
-  useEffect(() => {
-    let live = true;
-    void fetchData(store).then((d) => {
-      if (live) setData(d);
-    });
-    return () => {
-      live = false;
-    };
-  }, [store, version]);
+  useEffect(() => loadWhileMounted(() => fetchData(store), setData), [store, version]);
 
   if (!data) return null;
 

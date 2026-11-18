@@ -13,6 +13,7 @@ import { Headlines } from '../Headlines.tsx';
 import { PeriodSwitcher } from '../PeriodSwitcher.tsx';
 import { hrefFor, navigate } from '../router.ts';
 import { SpendingChart } from '../SpendingChart.tsx';
+import { loadWhileMounted } from '../load.ts';
 import { useStore } from '../useStore.ts';
 
 interface Data {
@@ -46,15 +47,7 @@ export function OverviewPage() {
   /** Bumped after a change, to load fresh data. */
   const [version, setVersion] = useState(0);
 
-  useEffect(() => {
-    let live = true;
-    void fetchData(store).then((d) => {
-      if (live) setData(d);
-    });
-    return () => {
-      live = false;
-    };
-  }, [store, version]);
+  useEffect(() => loadWhileMounted(() => fetchData(store), setData), [store, version]);
 
   if (!data) return null;
 

@@ -7,6 +7,7 @@ import { ImportSummary } from '../ImportSummary.tsx';
 import { SAMPLE_CSV } from '../sample-data.ts';
 import { navigate } from '../router.ts';
 import { UploadScreen } from '../UploadScreen.tsx';
+import { loadWhileMounted } from '../load.ts';
 import { useStore } from '../useStore.ts';
 
 const newId = () => crypto.randomUUID();
@@ -27,15 +28,7 @@ export function AddStatementPage() {
   // Sample data is only offered while there's nothing else, so it never mixes into a real budget.
   const [empty, setEmpty] = useState(false);
 
-  useEffect(() => {
-    let live = true;
-    void store.countTransactions().then((n) => {
-      if (live) setEmpty(n === 0);
-    });
-    return () => {
-      live = false;
-    };
-  }, [store]);
+  useEffect(() => loadWhileMounted(() => store.countTransactions(), (n) => setEmpty(n === 0)), [store]);
 
   async function trySample() {
     await store.loadSampleData(SAMPLE_CSV, { now: now(), newId });
