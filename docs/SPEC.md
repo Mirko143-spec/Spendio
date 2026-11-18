@@ -249,7 +249,7 @@ Clicking a category anywhere (chart bars, budget rows) → Transactions filtered
 - **Upload** (file picker + drag and drop; supported banks listed from the format registry; clear errors for unsupported, empty or oversized files) → **Import summary** (new / already imported / lines that couldn't be read, with line numbers) → **Review** (one group per merchant *and* kind, so "Swish to Anna" and "Swish from Anna" are separate decisions; sorted by absolute total; category dropdown pre-filled with any suggestion + "Remember" checkbox; "Skip for now"). Until the dashboard exists, the flow ends on a "Saved on this device" screen.
 - Person names (Swish counterparties) are tidied for display only: `DOE,JOHN` → "John Doe", all-caps names re-cased. Rules keep matching the original text.
 - **Transactions**: one row of filters — period (periods with data, newest first, or all), category (or Needs review), type, and search (merchant, tidied person name, bank text; all words must match) — kept in the URL (`#/transactions?period=…&category=…&kind=…&q=…`) so filtered views survive reloads and can be linked to. Newest first, 100 rows at a time ("Show more"). Each row: readable title, date and type, amount, and an inline category picker that asks "Only this one" or "All from <merchant>" (§7.5).
-- **History**: per budgeted category, month-by-month spending vs that month's limit
+- **History** (`#/history`): answers "do I keep going over?" as a table (rows: "All spending", then categories with limits — most often over first — then the rest by total; columns: 6 periods, oldest first). Each cell shows the net spent and, where a limit applied that month, "of 1 000 kr" or "over by 645 kr" (with a light warning tint as a second cue only). Each row with limits summarizes "Over in 1 of 3 months" / "Within the limit every month". Limits are looked up per period, so raising a limit never changes how earlier months are judged. Cells link to the matching transactions. "‹ Earlier / Later ›" move the window by 6 periods, never past the last period with data; the window is kept in the URL (`?end=YYYY-MM`). Categories with only money back are left out. On phones the category column stays put while months scroll sideways (with a hint).
 - **Savings**: Left over, savings rate, Moved to savings, month-by-month chart
 - **Categories & Rules** (`#/categories`):
   - *Categories*: spending and "not spending" (income, transfers) listed separately, each with its color (native color picker), name, transaction count and "built in" for system categories. Inline rename (duplicate names rejected with a message), a monthly limit from the current period on (spending categories only), and delete for non-system categories. Delete opens an inline confirmation (no browser dialog) that says what moves where ("Move its 3 transactions and 1 rule to [Other]") and that limits are removed. A form adds a new spending category.
@@ -327,14 +327,15 @@ src/
     period-nav.ts      which periods to offer and which to open on
     transaction-filter.ts  period / category / type / search filtering, newest first
     category-usage.ts  what depends on each category (for delete)
+    history.ts         month-by-month spending vs each month's limit
     names.ts           tidy person names for display
     account.ts, settings.ts, backup.ts
   storage/           the ONLY module that touches IndexedDB (Dexie); encryption is added here in v1.1
     db.ts              schema (v2: adds Swish from people to older databases) + first-run defaults
     store.ts           SpendioStore: the API the UI uses (atomic import, edits, rules, budgets, backup)
-  ui/                React components (Amount, PeriodSwitcher, Headlines, BudgetList, SpendingChart, TransactionFilters, TransactionList, CategoryEditor, CategoryLimit, DeleteCategory, RulesList, LimitForm, UploadScreen, ImportSummary, ReviewScreen, format.ts)
-    App.tsx            shell + navigation; hash routes #/, #/transactions, #/categories, #/add, #/review with query params for page state (router.ts, no router library)
-    pages/             OverviewPage, TransactionsPage, CategoriesPage, AddStatementPage, ReviewPage
+  ui/                React components (Amount, PeriodSwitcher, Headlines, BudgetList, SpendingChart, TransactionFilters, TransactionList, HistoryTable, CategoryEditor, CategoryLimit, DeleteCategory, RulesList, LimitForm, UploadScreen, ImportSummary, ReviewScreen, format.ts)
+    App.tsx            shell + navigation; hash routes #/, #/transactions, #/history, #/categories, #/add, #/review with query params for page state (router.ts, no router library)
+    pages/             OverviewPage, TransactionsPage, HistoryPage, CategoriesPage, AddStatementPage, ReviewPage
     StoreContext.tsx, useStore.ts   opens the store once and shares it
     dev/               dev-only previews (dropped from production builds)
 .claude/skills/      project skills: frontend-design, webapp-testing (Anthropic, Apache-2.0)
