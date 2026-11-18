@@ -5,6 +5,7 @@ import { DEFAULT_CATEGORIES, type Category } from '../core/categories.ts';
 import { importCsv, type ImportBatch, type ImportResult, type Transaction } from '../core/import.ts';
 import type { Ore } from '../core/money.ts';
 import { payday, type PeriodLabel, type PeriodSettings } from '../core/periods.ts';
+import type { TransactionKind } from '../core/formats/types.ts';
 import type { ReviewDecision } from '../core/review.ts';
 import type { MatchOp, Rule } from '../core/rules.ts';
 import { DEFAULT_SETTINGS, SCHEMA_VERSION, type AppSettings } from '../core/settings.ts';
@@ -211,11 +212,7 @@ export class SpendioStore {
           .anyOf(d.transactionIds)
           .modify({ categoryId: d.categoryId, categorySource: 'manual', suggested: false });
         if (d.remember) {
-          const swish = d.kind === 'swish_out' || d.kind === 'swish_in' || d.kind === 'swish_refund';
-          await this.saveUserRule(
-            { op: 'equals', value: d.merchantKey, ...(swish ? { kind: d.kind } : {}), categoryId: d.categoryId },
-            context,
-          );
+          await this.saveUserRule(merchantRule(d.merchantKey, d.kind, d.categoryId), context);
           rulesSaved++;
         }
       }
@@ -381,4 +378,14 @@ export async function openStore(name: string = DEFAULT_DB_NAME): Promise<Spendio
   const db = new SpendioDB(name);
   await db.open();
   return new SpendioStore(db);
+}
+
+const SWISH_KINDS: ReadonlySet<TransactionKind> = new Set(['swish_out', 'swish_in', 'swish_refund']);
+
+/**
+ * The rule that remembers a merchant's category. For Swish it is limited to the direction
+ * (paying someone and being paid by them are different things); otherwise it matches any kind.
+ */
+function merchantRule(merchantKey: string, kind: TransactionKind, categoryId: string) {
+  return { op: 'equals' as const, value: merchantKey, ...(SWISH_KINDS.has(kind) ? { kind } : {}), categoryId };
 }
