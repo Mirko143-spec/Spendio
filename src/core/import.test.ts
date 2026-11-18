@@ -137,10 +137,11 @@ describe('fixture end to end: import → period summaries (hand-checked)', () =>
         [C.transport]: 64500 + 2400,
         [C.subscriptions]: 12900,
         [C.health]: 54600,
+        [C.swishFromPeople]: -(12500 + 150000), // money back from people lowers spending
       },
-      netSpending: 182500,
-      income: 1359200 + 100000 + 12500 + 150000, // CSN + cash deposit + Swish from people
-      leftOver: 1621700 - 182500,
+      netSpending: 182500 - 162500,
+      income: 1359200 + 100000, // CSN + cash deposit; Swish from people is not income
+      leftOver: 1459200 - 20000,
       movedToSavings: 500000 - 200000,
       needsReview: { count: 2, moneyOut: 89900, moneyIn: 16000 },
     });

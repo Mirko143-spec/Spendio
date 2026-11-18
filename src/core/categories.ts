@@ -53,11 +53,11 @@ export const DEFAULT_CATEGORIES: readonly Category[] = [
   spending(CATEGORY_IDS.housing, 'Housing & Bills', '#475569'),
   spending(CATEGORY_IDS.travel, 'Travel', '#0d9488'),
   spending(CATEGORY_IDS.swishPeople, 'Swish to people', '#9333ea'),
+  // Money back from people (split bills, paying you back). A spending category whose total is usually
+  // negative, so it lowers total spending instead of inflating income. Gifts belong in Income.
+  spending(CATEGORY_IDS.swishFromPeople, 'Swish from people', '#a855f7'),
   spending(CATEGORY_IDS.other, 'Other', '#78716c'),
   { id: CATEGORY_IDS.income, name: 'Income', color: '#15803d', type: 'income', system: true },
-  // Money from private persons (Swish). Income, so it never makes spending look smaller; a friend paying
-  // back a shared bill can still be put in that spending category instead, to offset it.
-  { id: CATEGORY_IDS.swishFromPeople, name: 'Swish from people', color: '#a855f7', type: 'income', system: false },
   { id: CATEGORY_IDS.savings, name: 'Transfer: Savings', color: '#0369a1', type: 'transfer', transferKind: 'savings', system: true },
   { id: CATEGORY_IDS.internal, name: 'Transfer: Internal', color: '#64748b', type: 'transfer', transferKind: 'internal', system: true },
 ];
