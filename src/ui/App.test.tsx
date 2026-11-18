@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import Dexie from 'dexie';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { CATEGORY_IDS as C } from '../core/categories.ts';
 import { openStore } from '../storage/store.ts';
 import { App } from './App.tsx';
@@ -16,6 +16,9 @@ const dbName = () => {
   names.push(name);
   return name;
 };
+beforeEach(() => {
+  window.location.hash = '';
+});
 afterEach(async () => {
   for (const name of names.splice(0)) await Dexie.delete(name);
 });
@@ -23,8 +26,15 @@ afterEach(async () => {
 const upload = async (text: string) =>
   userEvent.upload(await screen.findByLabelText('Choose a CSV file'), new File([text], 'statement.csv', { type: 'text/csv' }));
 
-describe('App import flow', () => {
-  it('imports, summarizes, reviews and saves to storage', async () => {
+describe('App', () => {
+  it('sends a first-time visitor to "Add statement"', async () => {
+    render(<App dbName={dbName()} />);
+    expect(await screen.findByRole('heading', { name: 'Add a bank statement' })).toBeInTheDocument();
+    expect(window.location.hash).toBe('#/add');
+    expect(screen.getByRole('link', { name: 'Add statement' })).toHaveAttribute('aria-current', 'page');
+  });
+
+  it('imports, summarizes, reviews, saves, and lands on the overview', async () => {
     const name = dbName();
     const user = userEvent.setup();
     render(<App dbName={name} />);
@@ -33,24 +43,32 @@ describe('App import flow', () => {
     expect(await screen.findByRole('heading', { name: 'Imported 28 transactions' })).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Review 6 transactions' }));
-    const shop = await screen.findByRole('combobox', { name: 'EXEMPELSHOP' });
-    await user.selectOptions(shop, C.shopping);
+    await user.selectOptions(await screen.findByRole('combobox', { name: 'EXEMPELSHOP' }), C.shopping);
     await user.click(screen.getByRole('button', { name: /^Save/ }));
-    expect(await screen.findByRole('heading', { name: 'Saved on this device' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Overview' })).toBeInTheDocument();
+    expect(window.location.hash).toBe('#/');
 
     const store = await openStore(name);
-    const saved = (await store.listTransactions()).find((t) => t.merchantKey === 'EXEMPELSHOP');
-    expect(saved).toMatchObject({ categoryId: C.shopping, categorySource: 'manual' });
-    expect(await store.listUserRules()).toEqual([expect.objectContaining({ value: 'EXEMPELSHOP', categoryId: C.shopping })]);
+    expect((await store.listTransactions()).find((t) => t.merchantKey === 'EXEMPELSHOP')).toMatchObject({
+      categoryId: C.shopping,
+      categorySource: 'manual',
+    });
     store.close();
   });
 
-  it('reports nothing new when the same file is added again', async () => {
+  it('opens on the overview once there is data, and reports nothing new on re-import', async () => {
+    const name = dbName();
     const user = userEvent.setup();
-    render(<App dbName={dbName()} />);
+    const { unmount } = render(<App dbName={name} />);
     await upload(fixture);
     await user.click(await screen.findByRole('button', { name: 'Review later' }));
-    await user.click(await screen.findByRole('button', { name: 'Add another statement' }));
+    unmount();
+
+    window.location.hash = '';
+    render(<App dbName={name} />);
+    expect(await screen.findByRole('heading', { name: 'Overview' })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('link', { name: 'Add statement' }));
     await upload(fixture);
     const heading = await screen.findByRole('heading', { name: 'Nothing new in this file' });
     expect(within(heading.closest('section')!).getByText('Already imported, skipped').nextElementSibling).toHaveTextContent('28');

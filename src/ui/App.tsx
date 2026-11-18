@@ -1,22 +1,43 @@
 import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react';
-import type { Category } from '../core/categories.ts';
-import type { ImportResult } from '../core/import.ts';
-import { groupForReview, type ReviewGroup } from '../core/review.ts';
-import { openStore, type SpendioStore } from '../storage/store.ts';
-import { ImportSummary } from './ImportSummary.tsx';
-import { ReviewScreen } from './ReviewScreen.tsx';
-import { UploadScreen } from './UploadScreen.tsx';
+import { AddStatementPage } from './pages/AddStatementPage.tsx';
+import { OverviewPage } from './pages/OverviewPage.tsx';
+import { ReviewPage } from './pages/ReviewPage.tsx';
+import { hrefFor, navigate, useRoute, type Route } from './router.ts';
+import { StoreProvider } from './StoreContext.tsx';
+import { useStore } from './useStore.ts';
 
 // Dev-only previews; `import.meta.env.DEV` is false in production builds, so they are dropped.
 const ReviewPreview = import.meta.env.DEV ? lazy(() => import('./dev/ReviewPreview.tsx')) : null;
 
-/** Page frame: wordmark, one centered reading column, and the privacy promise. */
-export function AppShell({ children }: { children: ReactNode }) {
+const NAV: { route: Route; label: string }[] = [
+  { route: 'overview', label: 'Overview' },
+  { route: 'add', label: 'Add statement' },
+];
+
+/** Page frame: wordmark, navigation, one centered reading column, and the privacy promise. */
+export function AppShell({ children, nav = true }: { children: ReactNode; nav?: boolean }) {
+  const route = useRoute();
   return (
     <div className="mx-auto flex min-h-dvh max-w-[44rem] flex-col px-4 sm:px-6">
-      <header className="flex items-center gap-2.5 pt-6 pb-10 sm:pt-8">
-        <img src="/favicon.svg" alt="" className="size-7" />
-        <span className="text-lg font-bold tracking-[-0.02em]">Spendio</span>
+      <header className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 pt-6 pb-10 sm:pt-8">
+        <a href={hrefFor('overview')} className="flex items-center gap-2.5">
+          <img src="/favicon.svg" alt="" className="size-7" />
+          <span className="text-lg font-bold tracking-[-0.02em]">Spendio</span>
+        </a>
+        {nav && (
+          <nav aria-label="Main" className="flex gap-5 text-sm">
+            {NAV.map((item) => (
+              <a
+                key={item.route}
+                href={hrefFor(item.route)}
+                aria-current={route === item.route ? 'page' : undefined}
+                className={route === item.route ? 'font-semibold text-ink' : 'text-ink-muted hover:text-ink'}
+              >
+                {item.label}
+              </a>
+            ))}
+          </nav>
+        )}
       </header>
       <main className="flex-1">{children}</main>
       <footer className="py-8 text-sm text-ink-muted">Your bank data stays on this device.</footer>
@@ -24,106 +45,56 @@ export function AppShell({ children }: { children: ReactNode }) {
   );
 }
 
-type Screen =
-  | { name: 'upload' }
-  | { name: 'summary'; result: ImportResult; reviewCount: number }
-  | { name: 'review'; groups: ReviewGroup[]; categories: Category[] }
-  | { name: 'saved' };
+function StorageUnavailable({ message }: { message: string }) {
+  return (
+    <AppShell nav={false}>
+      <h1 className="text-title font-semibold tracking-[-0.015em]">Spendio can’t save data in this browser</h1>
+      <p role="alert" className="mt-4 max-w-prose text-ink-muted">
+        Spendio stores your transactions in this browser, and that storage isn’t available here ({message}). Private
+        browsing windows often block it. Open Spendio in a normal window to continue.
+      </p>
+    </AppShell>
+  );
+}
 
-const newId = () => crypto.randomUUID();
-const now = () => new Date().toISOString();
+/** Sends a first-time visitor (no transactions yet) to "Add statement" instead of an empty overview. */
+function useFirstVisitRedirect(): boolean {
+  const store = useStore();
+  const [checked, setChecked] = useState(false);
+  useEffect(() => {
+    void store.countTransactions().then((count) => {
+      if (count === 0 && window.location.hash === '') navigate('add');
+      setChecked(true);
+    });
+  }, [store]);
+  return checked;
+}
+
+function Pages() {
+  const route = useRoute();
+  if (!useFirstVisitRedirect()) return <AppShell>{null}</AppShell>;
+  return (
+    <AppShell>
+      {route === 'overview' && <OverviewPage />}
+      {route === 'add' && <AddStatementPage key="add" />}
+      {route === 'review' && <ReviewPage />}
+    </AppShell>
+  );
+}
 
 export function App({ dbName }: { dbName?: string } = {}) {
   if (ReviewPreview && new URLSearchParams(window.location.search).get('preview') === 'review') {
     return (
-      <AppShell>
+      <AppShell nav={false}>
         <Suspense>
           <ReviewPreview />
         </Suspense>
       </AppShell>
     );
   }
-  return <ImportFlow dbName={dbName} />;
-}
-
-function ImportFlow({ dbName }: { dbName?: string }) {
-  const [store, setStore] = useState<SpendioStore | null>(null);
-  const [storeError, setStoreError] = useState<string | null>(null);
-  const [screen, setScreen] = useState<Screen>({ name: 'upload' });
-
-  useEffect(() => {
-    let opened: SpendioStore | undefined;
-    openStore(dbName).then(
-      (s) => setStore((opened = s)),
-      (e: unknown) => setStoreError(e instanceof Error ? e.message : String(e)),
-    );
-    return () => opened?.close();
-  }, [dbName]);
-
-  if (storeError) {
-    return (
-      <AppShell>
-        <h1 className="text-title font-semibold tracking-[-0.015em]">Spendio can’t save data in this browser</h1>
-        <p role="alert" className="mt-4 max-w-prose text-ink-muted">
-          Spendio stores your transactions in this browser, and that storage isn’t available here ({storeError}).
-          Private browsing windows often block it. Open Spendio in a normal window to continue.
-        </p>
-      </AppShell>
-    );
-  }
-  if (!store) return <AppShell>{null}</AppShell>;
-
-  const reviewGroups = async () => groupForReview(await store.listTransactions());
-
-  async function importFile(text: string) {
-    const result = await store!.importCsv(text, { now: now(), newId });
-    const reviewCount = (await reviewGroups()).reduce((n, g) => n + g.transactionIds.length, 0);
-    setScreen({ name: 'summary', result, reviewCount });
-  }
-
-  async function startReview() {
-    setScreen({ name: 'review', groups: await reviewGroups(), categories: await store!.listCategories() });
-  }
-
   return (
-    <AppShell>
-      {screen.name === 'upload' && <UploadScreen onImport={importFile} />}
-      {screen.name === 'summary' && (
-        <ImportSummary
-          result={screen.result}
-          reviewCount={screen.reviewCount}
-          onReview={() => void startReview()}
-          onDone={() => setScreen({ name: 'saved' })}
-        />
-      )}
-      {screen.name === 'review' && (
-        <ReviewScreen
-          groups={screen.groups}
-          categories={screen.categories}
-          onSave={(decisions) =>
-            void store.applyReviewDecisions(decisions, { now: now(), newId }).then(() => setScreen({ name: 'saved' }))
-          }
-          onSkip={() => setScreen({ name: 'saved' })}
-        />
-      )}
-      {screen.name === 'saved' && (
-        <section aria-labelledby="saved-title">
-          <h1 id="saved-title" className="text-title font-semibold tracking-[-0.015em]">
-            Saved on this device
-          </h1>
-          <p className="mt-4 max-w-prose text-ink-muted">
-            Your transactions are stored in this browser. Add your next statement whenever you like; anything you
-            already imported is skipped automatically.
-          </p>
-          <button
-            type="button"
-            onClick={() => setScreen({ name: 'upload' })}
-            className="mt-8 rounded-lg bg-accent px-5 py-2.5 font-semibold text-accent-ink"
-          >
-            Add another statement
-          </button>
-        </section>
-      )}
-    </AppShell>
+    <StoreProvider dbName={dbName} renderError={(message) => <StorageUnavailable message={message} />}>
+      <Pages />
+    </StoreProvider>
   );
 }
