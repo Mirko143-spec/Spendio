@@ -73,3 +73,22 @@ describe('OverviewPage', () => {
     expect(await screen.findByText(/of 2 000 kr|of 2\u00A0000 kr/)).toBeInTheDocument();
   });
 });
+
+describe('OverviewPage with sample data', () => {
+  it('says it is sample data, and removes it on request', async () => {
+    await store.loadSampleData(fixture, { now: '2026-12-01T12:00:00.000Z', newId: () => crypto.randomUUID() });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    renderPage();
+    expect(await screen.findByRole('note')).toHaveTextContent('You’re exploring sample data');
+    await user.click(screen.getByRole('button', { name: 'Remove sample data' }));
+    await vi.waitFor(() => expect(window.location.hash).toBe('#/add'));
+    expect(await store.countTransactions()).toBe(0);
+  });
+
+  it('shows no sample notice for your own imports', async () => {
+    await store.importCsv(fixture, { now: '2026-12-01T12:00:00.000Z', newId: () => crypto.randomUUID() });
+    renderPage();
+    expect(await screen.findByRole('heading', { name: 'December 2026' })).toBeInTheDocument();
+    expect(screen.queryByRole('note')).not.toBeInTheDocument();
+  });
+});

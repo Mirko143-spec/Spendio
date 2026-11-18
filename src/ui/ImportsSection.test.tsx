@@ -58,3 +58,10 @@ describe('ImportsSection', () => {
     expect(screen.getByText('No imports yet.')).toBeInTheDocument();
   });
 });
+
+describe('ImportsSection sample data', () => {
+  it('labels the sample import as sample data rather than as a bank', () => {
+    render(<ImportsSection batches={[batch({ label: 'Sample data' })]} accounts={ACCOUNTS} onUndo={vi.fn()} />);
+    expect(screen.getByRole('listitem')).toHaveTextContent('Sample data, 18 Nov');
+  });
+});
