@@ -8,7 +8,7 @@ interface AmountProps {
    * `danger`: like `plain`, in the warning color (e.g. "Over budget by 340 kr").
    */
   tone?: 'signed' | 'plain' | 'danger';
-  size?: 'row' | 'headline';
+  size?: 'inline' | 'row' | 'headline';
   className?: string;
 }
 
@@ -21,13 +21,13 @@ export function Amount({ ore, tone = 'signed', size = 'row', className = '' }: A
   const shownSign = tone === 'signed' ? sign : '';
   const label = `${shownSign === '−' ? 'minus ' : ''}${number} ${currency}`;
   const color = tone === 'danger' ? 'text-danger' : tone === 'signed' && ore > 0 ? 'text-accent' : 'text-ink';
-  const scale = size === 'headline' ? 'text-title tracking-[-0.015em]' : 'text-amount';
+  const scale = size === 'headline' ? 'text-title tracking-[-0.015em]' : size === 'inline' ? 'text-sm' : 'text-amount';
   return (
     <span aria-label={label} className={`${scale} font-semibold whitespace-nowrap ${color} ${className}`}>
       <span aria-hidden="true">
         {shownSign}
         {number}
-        <span className="ml-1 text-base font-normal text-ink-muted">{currency}</span>
+        <span className={`ml-1 font-normal text-ink-muted ${size === 'inline' ? '' : 'text-base'}`}>{currency}</span>
       </span>
     </span>
   );
