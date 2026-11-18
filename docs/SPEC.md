@@ -183,11 +183,11 @@ A user's manual category on a single transaction (`categorySource = 'manual'`) i
 
 ## 8. Import pipeline
 
-1. Read file → detect preset (Nordea) or open the generic mapper.
-2. Parse rows → scrub personnummer → parse amounts (öre), dates, `Rubrik`.
+1. Read file → detect its **bank format** (§4); if none matches, open the generic mapper.
+2. Parse rows with that format → scrub national ID numbers → parse amounts (öre), dates, descriptions.
 3. **Dedup** (below).
-4. Categorize new rows.
-5. Save as one **ImportBatch**.
+4. Describe (format) and categorize new rows with the rules of the format's **country**.
+5. Save as one **ImportBatch**, in one storage transaction. The bank's **account** is created on its first import (a fresh install has none).
 6. Show **import summary**: `56 rows · 41 new · 15 already imported`.
 7. Go to **review** (skippable).
 
