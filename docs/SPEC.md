@@ -251,7 +251,9 @@ Clicking a category anywhere (chart bars, budget rows) → Transactions filtered
 - **Transactions**: one row of filters — period (periods with data, newest first, or all), category (or Needs review), type, and search (merchant, tidied person name, bank text; all words must match) — kept in the URL (`#/transactions?period=…&category=…&kind=…&q=…`) so filtered views survive reloads and can be linked to. Newest first, 100 rows at a time ("Show more"). Each row: readable title, date and type, amount, and an inline category picker that asks "Only this one" or "All from <merchant>" (§7.5).
 - **History**: per budgeted category, month-by-month spending vs that month's limit
 - **Savings**: Left over, savings rate, Moved to savings, month-by-month chart
-- **Categories & Rules**: edit categories, colors and limits; list/delete user rules; view built-in rules
+- **Categories & Rules** (`#/categories`):
+  - *Categories*: spending and "not spending" (income, transfers) listed separately, each with its color (native color picker), name, transaction count and "built in" for system categories. Inline rename (duplicate names rejected with a message), a monthly limit from the current period on (spending categories only), and delete for non-system categories. Delete opens an inline confirmation (no browser dialog) that says what moves where ("Move its 3 transactions and 1 rule to [Other]") and that limits are removed. A form adds a new spending category.
+  - *Rules*: your rules, newest first, in plain language ("Merchant is exactly TEBEX.ORG, Swish received only"), each with a category picker (updates the rule; affects future imports) and Delete. Built-in rules for the country are read-only, grouped by category behind a disclosure, each merchant name shown once; rules for deleted categories are hidden.
 - **Settings**: period start day, export/import backup, wipe all data, (v1.1) passcode
 
 ### Visual design
