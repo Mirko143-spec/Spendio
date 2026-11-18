@@ -1,5 +1,5 @@
-import { isNordeaCsv, parseNordeaCsv } from '../../csv/nordea.ts';
-import { describeTransaction } from '../../describe.ts';
+import { isNordeaCsv, parseNordeaCsv } from './parse.ts';
+import { describeTransaction } from './describe.ts';
 import type { BankFormat } from '../types.ts';
 
 /** Nordea (Sweden) CSV export. See docs/SPEC.md §4.1. */

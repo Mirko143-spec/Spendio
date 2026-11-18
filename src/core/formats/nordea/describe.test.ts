@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { parseNordeaCsv } from './csv/nordea.ts';
+import { parseNordeaCsv } from './parse.ts';
 import { describeTransaction } from './describe.ts';
 
 describe('describeTransaction', () => {
@@ -55,7 +55,7 @@ describe('describeTransaction', () => {
 });
 
 describe('describeTransaction on the fixture', () => {
-  const fixture = readFileSync(join(import.meta.dirname, '../../fixtures/nordea-sample.csv'), 'utf8');
+  const fixture = readFileSync(join(import.meta.dirname, '../../../../fixtures/nordea-sample.csv'), 'utf8');
   const described = parseNordeaCsv(fixture).rows.map((r) => describeTransaction(r.description, r.bookingDate));
 
   it('classifies every row', () => {

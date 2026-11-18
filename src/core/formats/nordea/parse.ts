@@ -1,7 +1,7 @@
 import Papa from 'papaparse';
-import { parseAmount } from '../money.ts';
-import { redactPersonnummer } from '../scrub.ts';
-import type { ParsedRow, ParseResult, RowError } from './types.ts';
+import { parseAmount } from '../../money.ts';
+import { redactPersonnummer } from '../../scrub.ts';
+import type { ParsedRow, ParseResult, RowError } from '../../csv/types.ts';
 
 /**
  * Nordea (Sweden) CSV export, as described in docs/SPEC.md §4.1:

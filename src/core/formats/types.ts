@@ -1,5 +1,18 @@
 import type { ParseResult } from '../csv/types.ts';
-import type { Described } from '../describe.ts';
+
+/** What kind of transaction a row is. Banks word these differently; each format maps its own text. */
+export type TransactionKind = 'card' | 'swish_out' | 'swish_in' | 'swish_refund' | 'autogiro' | 'deposit' | 'other';
+
+/** A bank description, read by a `BankFormat`. */
+export interface Described {
+  kind: TransactionKind;
+  /** Counterparty text with the bank's kind prefix (and any purchase date) removed, before merchant cleanup. */
+  counterparty: string;
+  /** Purchase date when the bank includes one and it is plausible. */
+  purchaseDate?: string;
+  /** Date used for periods: purchase date if known, otherwise booking date. */
+  effectiveDate: string;
+}
 
 /**
  * A bank's statement export format. Each supported bank is one `BankFormat`; the import

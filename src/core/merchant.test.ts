@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { parseNordeaCsv } from './csv/nordea.ts';
-import { describeTransaction } from './describe.ts';
+import { parseNordeaCsv } from './formats/nordea/parse.ts';
+import { describeTransaction } from './formats/nordea/describe.ts';
 import { cleanMerchant, looksLikeBusiness } from './merchant.ts';
 
 describe('cleanMerchant', () => {

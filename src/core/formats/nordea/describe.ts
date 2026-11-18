@@ -1,21 +1,10 @@
-import { daysBetween, isoDate } from './dates.ts';
+import { daysBetween, isoDate } from '../../dates.ts';
+import type { Described, TransactionKind } from '../types.ts';
 
 /**
- * Parses a Nordea `Rubrik` into what kind of transaction it is, who the counterparty is,
+ * Reads a Nordea `Rubrik`: what kind of transaction it is, who the counterparty is,
  * and which date it belongs to (docs/SPEC.md §5).
  */
-
-export type TransactionKind = 'card' | 'swish_out' | 'swish_in' | 'swish_refund' | 'autogiro' | 'deposit' | 'other';
-
-export interface Described {
-  kind: TransactionKind;
-  /** Counterparty text with the kind prefix (and card date) removed, before merchant cleanup. */
-  counterparty: string;
-  /** Purchase date from `Kortköp YYMMDD`, when present and plausible. */
-  purchaseDate?: string;
-  /** Date used for periods: purchase date if known, otherwise booking date. */
-  effectiveDate: string;
-}
 
 /** A purchase date further back than this is treated as a misparse and ignored. */
 const MAX_BOOKING_DELAY_DAYS = 30;

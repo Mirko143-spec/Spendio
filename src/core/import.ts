@@ -1,8 +1,9 @@
 import { categorize, type CategorySource } from './categorize.ts';
-import { parseNordeaCsv } from './csv/nordea.ts';
+import { parseNordeaCsv } from './formats/nordea/parse.ts';
 import type { RowError } from './csv/types.ts';
 import { dedupRows } from './dedup.ts';
-import { describeTransaction, type TransactionKind } from './describe.ts';
+import { describeTransaction } from './formats/nordea/describe.ts';
+import type { TransactionKind } from './formats/types.ts';
 import { cleanMerchant } from './merchant.ts';
 import type { Ore } from './money.ts';
 import type { Rule } from './rules.ts';

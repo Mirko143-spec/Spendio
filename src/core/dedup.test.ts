@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { parseNordeaCsv } from './csv/nordea.ts';
+import { parseNordeaCsv } from './formats/nordea/parse.ts';
 import type { ParsedRow } from './csv/types.ts';
 import { dedupRows, fingerprintRows } from './dedup.ts';
 
