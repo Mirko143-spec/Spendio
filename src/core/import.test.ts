@@ -199,3 +199,9 @@ describe('importCsv format detection', () => {
     expect(new Set(r.transactions.map((t) => t.merchantKey))).toEqual(new Set(['SAME']));
   });
 });
+
+describe('importCsv batch label', () => {
+  it('can be given its own label', () => {
+    expect(importCsv(fixture, options({ label: 'Sample data' })).batch.label).toBe('Sample data');
+  });
+});
