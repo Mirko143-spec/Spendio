@@ -145,7 +145,7 @@ A rule matches on `merchantKey` (optionally restricted by `kind`) with operator 
 3. **Built-in kind rules** (e.g. `Studiestöd` → Income)
 4. Otherwise → Needs review
 
-Within a tier, the most specific match wins: `equals` > `startsWith` > `contains`, then the longest pattern, then the newest rule.
+Within a tier, the most specific match wins: `equals` > `startsWith` > `contains`, then a rule restricted to the transaction's kind over an unrestricted one, then the longest pattern, then the newest rule (then rule id, so the result never depends on rule order).
 
 A user's manual category on a single transaction (`categorySource = 'manual'`) is never overwritten by rules, re-imports or rule changes.
 
