@@ -12,6 +12,7 @@ import { downloadText } from '../download.ts';
 import { ImportsSection } from '../ImportsSection.tsx';
 import { PeriodSettingsForm } from '../PeriodSettingsForm.tsx';
 import { navigate } from '../router.ts';
+import { loadWhileMounted } from '../load.ts';
 import { useStore } from '../useStore.ts';
 
 interface Data {
@@ -37,15 +38,7 @@ export function SettingsPage() {
   const [data, setData] = useState<Data | null>(null);
   const [version, setVersion] = useState(0);
 
-  useEffect(() => {
-    let live = true;
-    void fetchData(store).then((d) => {
-      if (live) setData(d);
-    });
-    return () => {
-      live = false;
-    };
-  }, [store, version]);
+  useEffect(() => loadWhileMounted(() => fetchData(store), setData), [store, version]);
 
   if (!data) return null;
   const reload = () => setVersion((v) => v + 1);

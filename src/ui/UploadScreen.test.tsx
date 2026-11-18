@@ -56,3 +56,15 @@ describe('UploadScreen', () => {
     expect(onImport).not.toHaveBeenCalled();
   });
 });
+
+describe('UploadScreen sample data', () => {
+  it('offers sample data only when asked to, and loads it', async () => {
+    const onTrySample = vi.fn().mockResolvedValue(undefined);
+    const { unmount } = render(<UploadScreen onImport={vi.fn()} onTrySample={onTrySample} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Try Spendio with sample data' }));
+    expect(onTrySample).toHaveBeenCalled();
+    unmount();
+    render(<UploadScreen onImport={vi.fn()} />);
+    expect(screen.queryByRole('button', { name: /sample data/ })).not.toBeInTheDocument();
+  });
+});

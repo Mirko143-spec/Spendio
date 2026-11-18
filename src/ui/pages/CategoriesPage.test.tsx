@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { render, screen, within } from '@testing-library/react';
+import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import Dexie from 'dexie';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -26,6 +26,9 @@ beforeEach(async () => {
 });
 afterEach(async () => {
   vi.useRealTimers();
+  // Unmount before closing: this hook runs before the shared cleanup(), and a page still
+  // mounted would reload from a closed database.
+  cleanup();
   store.close();
   await Dexie.delete(name);
 });

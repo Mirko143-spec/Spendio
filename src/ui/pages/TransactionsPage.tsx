@@ -9,6 +9,7 @@ import type { SpendioStore } from '../../storage/store.ts';
 import { replaceParams, useRouteParams } from '../router.ts';
 import { TransactionFilters } from '../TransactionFilters.tsx';
 import { TransactionList } from '../TransactionList.tsx';
+import { loadWhileMounted } from '../load.ts';
 import { useStore } from '../useStore.ts';
 
 interface Data {
@@ -35,15 +36,7 @@ export function TransactionsPage() {
   const [data, setData] = useState<Data | null>(null);
   const [version, setVersion] = useState(0);
 
-  useEffect(() => {
-    let live = true;
-    void fetchData(store).then((d) => {
-      if (live) setData(d);
-    });
-    return () => {
-      live = false;
-    };
-  }, [store, version]);
+  useEffect(() => loadWhileMounted(() => fetchData(store), setData), [store, version]);
 
   // Filters live in the URL (#/transactions?period=…&category=…&kind=…&q=…).
   const filter: TransactionFilter = useMemo(

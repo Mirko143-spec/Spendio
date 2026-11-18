@@ -34,7 +34,7 @@ Spendio is a budgeting web app. You upload a bank statement CSV; Spendio automat
 - JSON backup export/import, wipe all data
 - Responsive (phone width), light/dark mode following system
 
-### v1.1
+### Next (passcode encryption)
 - Optional passcode: encrypts all stored data (Web Crypto, PBKDF2 → AES-GCM), unlock screen, auto-lock, change passcode
 - Encrypted backups using the same passcode
 
@@ -254,6 +254,7 @@ Clicking a category anywhere (chart bars, budget rows) → Transactions filtered
 
 ### Other pages
 - **Upload** (file picker + drag and drop; preset banks listed from the format registry; clear errors for files that aren't a table, empty or oversized files) → **Set up this file's layout** only for a table no format recognizes (bank name first, the file's first rows, column pickers labelled with example values, one amount column or money out / money in, date/decimal/separator formats, a live preview of the first 5 rows as they will import and of lines that can't be read; "Save and import" enabled once named, complete and at least one row reads) → **Import summary** (new / already imported / lines that couldn't be read, with line numbers) → **Review** (one group per merchant *and* kind, so "Swish to Anna" and "Swish from Anna" are separate decisions; sorted by absolute total; category dropdown pre-filled with any suggestion + "Remember" checkbox; "Skip for now"). The flow then continues to the overview.
+- **Sample data:** while there is no data at all, "Add statement" offers "Try Spendio with sample data": a synthetic sample statement (the `fixtures/nordea-sample.csv` test fixture: fake names, no personnummer) bundled into the app and imported with the label "Sample data". The overview then shows "You’re exploring sample data" with **Remove sample data** (removes only sample imports and returns to Add statement); Settings lists it as "Sample data". It lets someone explore every screen without a bank export, e.g. on the public site.
 - Person names (Swish counterparties) are tidied for display only: `DOE,JOHN` → "John Doe", all-caps names re-cased. Rules keep matching the original text.
 - **Transactions**: one row of filters — period (periods with data, newest first, or all), category (or Needs review), type, and search (merchant, tidied person name, bank text; all words must match) — kept in the URL (`#/transactions?period=…&category=…&kind=…&q=…`) so filtered views survive reloads and can be linked to. Newest first, 100 rows at a time ("Show more"). Each row: readable title, date and type, amount, and an inline category picker that asks "Only this one" or "All from <merchant>" (§7.5).
 - **History** (`#/history`): answers "do I keep going over?" as a table (rows: "All spending", then categories with limits — most often over first — then the rest by total; columns: 6 periods, oldest first). Each cell shows the net spent and, where a limit applied that month, "of 1 000 kr" or "over by 645 kr" (with a light warning tint as a second cue only). Each row with limits summarizes "Over in 1 of 3 months" / "Within the limit every month". Limits are looked up per period, so raising a limit never changes how earlier months are judged. Cells link to the matching transactions. "‹ Earlier / Later ›" move the window by 6 periods, never past the last period with data; the window is kept in the URL (`?end=YYYY-MM`). Categories with only money back are left out. On phones the category column stays put while months scroll sideways (with a hint).
@@ -267,7 +268,7 @@ Clicking a category anywhere (chart bars, budget rows) → Transactions filtered
   - *Imports*: past imports by bank and date with what they added; "Undo" (inline confirmation) removes the import's transactions, including categories chosen for them, while rules stay.
   - *File layouts*: layouts set up with the mapper (bank name, date set up) with "Forget" behind an inline confirmation; imported transactions stay, and the next file with that layout opens the mapper again.
   - *Delete all data*: two-step inline confirmation stating it can't be undone and pointing to the backup; afterwards the app starts over on "Add statement".
-  - (v1.1) passcode.
+  - (Next) passcode.
   - No browser dialogs anywhere; hidden file inputs show their keyboard focus on their visible label.
 
 ### Visual design
@@ -346,7 +347,7 @@ src/
     savings.ts         left over, savings rate and money moved per period, with window totals
     names.ts           tidy person names for display
     account.ts, settings.ts, backup.ts
-  storage/           the ONLY module that touches IndexedDB (Dexie); encryption is added here in v1.1
+  storage/           the ONLY module that touches IndexedDB (Dexie); passcode encryption (next) is added here
     db.ts              schema (v2: adds Swish from people to older databases) + first-run defaults
     store.ts           SpendioStore: the API the UI uses (atomic import, edits, rules, budgets, backup)
   ui/                React components (Amount, PeriodSwitcher, Headlines, BudgetList, SpendingChart, TransactionFilters, TransactionList, HistoryTable, ColumnChart, PeriodWindow (+ period-window.ts), CategoryEditor, CategoryLimit, DeleteCategory, RulesList, LimitForm, PeriodSettingsForm, BackupSection, ImportsSection, FileLayoutsSection, DeleteAllData, CsvMapper, download.ts, UploadScreen, ImportSummary, ReviewScreen, format.ts)
@@ -378,11 +379,12 @@ v1: unencrypted, with an on-screen warning that it contains bank data. Import va
 - Other headers: `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`, `Permissions-Policy: camera=(), microphone=(), geolocation=()`, `Cross-Origin-Opener-Policy: same-origin`.
 - All CSV content is untrusted: rendered only as text (React escaping, no `dangerouslySetInnerHTML`).
 - Personnummer scrubbing (§4.3). Real statements are never committed: `.gitignore` blocks `*.csv` outside `fixtures/`.
-- HTTPS is required in production (Web Crypto needs a secure context for v1.1). It's handled by the hosting proxy, not the container.
+- HTTPS is required in production (Web Crypto needs a secure context for the upcoming passcode encryption). It's handled by the hosting proxy, not the container.
 
 ## 16. Deployment
 
 - **CI (GitHub Actions):** on every pull request and push to `main`, a **Checks** workflow (typecheck, lint, test — parallel jobs) and a **Build** workflow (`npm run build` and a `docker build` that is never pushed, so a broken Dockerfile or nginx config is caught before deploy). Node version from `.nvmrc`. Deploying stays with Woodpecker (below).
+- **Releases:** every version gets an annotated git tag and a GitHub release, using semantic versioning (`vMAJOR.MINOR.PATCH`: features bump the minor, fixes the patch). The tag goes on `main` after the version's PR is merged, and `package.json` carries the same version. v1.0.0 was the first complete version.
 - **Local:** `docker compose up` → `http://localhost:8080`.
 - **Image:** multi-stage. `node:22-alpine` builds `dist/` → `nginx:alpine` serves it on **port 80**, with `docker/nginx.conf` providing the security headers and SPA fallback (`try_files $uri /index.html`). Same pattern as the MiranDinc project.
 - **Production:** the author's brother's server (Woodpecker CI → registry → Helm on Kubernetes, Traefik TLS, Cloudflare tunnel). The **Woodpecker/deploy config will be written by the author together with their brother** and is not part of this spec.

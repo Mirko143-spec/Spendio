@@ -1,6 +1,7 @@
 import { useId, useState } from 'react';
 import type { Account } from '../core/account.ts';
 import type { ImportBatch } from '../core/import.ts';
+import { isSampleBatch } from '../core/sample.ts';
 import { dateRange } from './format.ts';
 
 interface ImportsSectionProps {
@@ -43,7 +44,7 @@ function ImportRow({ batch, bank, onUndo }: { batch: ImportBatch; bank: string; 
   const id = useId();
   const [confirming, setConfirming] = useState(false);
   const date = dateRange(batch.importedAt.slice(0, 10), batch.importedAt.slice(0, 10));
-  const title = `${bank}, ${date}`;
+  const title = isSampleBatch(batch) ? `Sample data, ${date}` : `${bank}, ${date}`;
 
   return (
     <li className="py-4">

@@ -9,6 +9,7 @@ import { SettingsPage } from './pages/SettingsPage.tsx';
 import { TransactionsPage } from './pages/TransactionsPage.tsx';
 import { hrefFor, navigate, useRoute, type Route } from './router.ts';
 import { StoreProvider } from './StoreContext.tsx';
+import { loadWhileMounted } from './load.ts';
 import { useStore } from './useStore.ts';
 
 // Dev-only previews; `import.meta.env.DEV` is false in production builds, so they are dropped.
@@ -71,12 +72,17 @@ function StorageUnavailable({ message }: { message: string }) {
 function useFirstVisitRedirect(): boolean {
   const store = useStore();
   const [checked, setChecked] = useState(false);
-  useEffect(() => {
-    void store.countTransactions().then((count) => {
-      if (count === 0 && window.location.hash === '') navigate('add');
-      setChecked(true);
-    });
-  }, [store]);
+  useEffect(
+    () =>
+      loadWhileMounted(
+        () => store.countTransactions(),
+        (count) => {
+          if (count === 0 && window.location.hash === '') navigate('add');
+          setChecked(true);
+        },
+      ),
+    [store],
+  );
   return checked;
 }
 

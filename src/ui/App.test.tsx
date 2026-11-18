@@ -80,6 +80,21 @@ describe('App', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('This doesn’t look like a bank statement export');
   });
 
+  it('offers sample data on a first visit, and lands on the overview with it', async () => {
+    const name = dbName();
+    const user = userEvent.setup();
+    render(<App dbName={name} />);
+    await user.click(await screen.findByRole('button', { name: 'Try Spendio with sample data' }));
+    expect(await screen.findByRole('heading', { name: 'Budgets' })).toBeInTheDocument();
+    const store = await openStore(name);
+    expect((await store.listImportBatches()).map((b) => b.label)).toEqual(['Sample data']);
+    store.close();
+
+    await user.click(screen.getByRole('link', { name: 'Add statement' }));
+    await screen.findByLabelText('Choose a CSV file');
+    expect(screen.queryByRole('button', { name: /sample data/ })).not.toBeInTheDocument();
+  });
+
   it('sets up an unknown bank’s layout once, then imports that layout directly', async () => {
     const generic = readFileSync(join(import.meta.dirname, '../../fixtures/generic-sample.csv'), 'utf8');
     const user = userEvent.setup();

@@ -62,6 +62,8 @@ export interface ImportOptions {
   formats?: readonly BankFormat[];
   /** Categories that exist; rules for deleted ones are skipped. Omit to allow all. */
   categoryIds?: ReadonlySet<string>;
+  /** Overrides the batch label (default "<bank> · <date>"), e.g. to mark sample data. */
+  label?: string;
 }
 
 export interface ImportResult {
@@ -84,7 +86,7 @@ export class UnsupportedFormatError extends Error {
 }
 
 export function importCsv(text: string, options: ImportOptions): ImportResult {
-  const { existingFingerprints, userRules = [], now, newId, formats = BANK_FORMATS, categoryIds } = options;
+  const { existingFingerprints, userRules = [], now, newId, formats = BANK_FORMATS, categoryIds, label } = options;
   const format = detectFormat(text, formats);
   if (!format) throw new UnsupportedFormatError();
   const country = countryFor(format.country);
@@ -126,7 +128,7 @@ export function importCsv(text: string, options: ImportOptions): ImportResult {
     batch: {
       id: batchId,
       accountId,
-      label: `${format.name} · ${now.slice(0, 10)}`,
+      label: label ?? `${format.name} · ${now.slice(0, 10)}`,
       importedAt: now,
       rowCount: rows.length + errors.length,
       newCount: transactions.length,

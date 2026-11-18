@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { render, screen } from '@testing-library/react';
+import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import Dexie from 'dexie';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -24,6 +24,9 @@ beforeEach(async () => {
 });
 afterEach(async () => {
   vi.useRealTimers();
+  // Unmount before closing: this hook runs before the shared cleanup(), and a page still
+  // mounted would reload from a closed database.
+  cleanup();
   store.close();
   await Dexie.delete(name);
 });
@@ -71,5 +74,24 @@ describe('OverviewPage', () => {
     await vi.waitFor(async () => expect(limitFor(await store.listBudgets(), C.groceries, '2026-12')).toBe(200000));
     expect(limitFor(await store.listBudgets(), C.groceries, '2026-11')).toBeNull();
     expect(await screen.findByText(/of 2 000 kr|of 2\u00A0000 kr/)).toBeInTheDocument();
+  });
+});
+
+describe('OverviewPage with sample data', () => {
+  it('says it is sample data, and removes it on request', async () => {
+    await store.loadSampleData(fixture, { now: '2026-12-01T12:00:00.000Z', newId: () => crypto.randomUUID() });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    renderPage();
+    expect(await screen.findByRole('note')).toHaveTextContent('You’re exploring sample data');
+    await user.click(screen.getByRole('button', { name: 'Remove sample data' }));
+    await vi.waitFor(() => expect(window.location.hash).toBe('#/add'));
+    expect(await store.countTransactions()).toBe(0);
+  });
+
+  it('shows no sample notice for your own imports', async () => {
+    await store.importCsv(fixture, { now: '2026-12-01T12:00:00.000Z', newId: () => crypto.randomUUID() });
+    renderPage();
+    expect(await screen.findByRole('heading', { name: 'December 2026' })).toBeInTheDocument();
+    expect(screen.queryByRole('note')).not.toBeInTheDocument();
   });
 });

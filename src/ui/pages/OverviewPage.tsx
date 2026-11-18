@@ -5,13 +5,15 @@ import { buildDashboard } from '../../core/dashboard.ts';
 import type { Transaction } from '../../core/import.ts';
 import { periodBounds } from '../../core/period-nav.ts';
 import type { PeriodLabel } from '../../core/periods.ts';
+import { isSampleBatch } from '../../core/sample.ts';
 import type { AppSettings } from '../../core/settings.ts';
 import type { SpendioStore } from '../../storage/store.ts';
 import { BudgetList } from '../BudgetList.tsx';
 import { Headlines } from '../Headlines.tsx';
 import { PeriodSwitcher } from '../PeriodSwitcher.tsx';
-import { hrefFor } from '../router.ts';
+import { hrefFor, navigate } from '../router.ts';
 import { SpendingChart } from '../SpendingChart.tsx';
+import { loadWhileMounted } from '../load.ts';
 import { useStore } from '../useStore.ts';
 
 interface Data {
@@ -19,18 +21,21 @@ interface Data {
   categories: Category[];
   budgets: Budget[];
   settings: AppSettings;
+  /** True while the "Try Spendio with sample data" import is loaded. */
+  hasSample: boolean;
 }
 
 const today = () => new Date().toISOString().slice(0, 10);
 
 async function fetchData(store: SpendioStore): Promise<Data> {
-  const [transactions, categories, budgets, settings] = await Promise.all([
+  const [transactions, categories, budgets, settings, batches] = await Promise.all([
     store.listTransactions(),
     store.listCategories(),
     store.listBudgets(),
     store.getSettings(),
+    store.listImportBatches(),
   ]);
-  return { transactions, categories, budgets, settings };
+  return { transactions, categories, budgets, settings, hasSample: batches.some(isSampleBatch) };
 }
 
 /** The dashboard for one period (docs/SPEC.md §12). */
@@ -42,15 +47,7 @@ export function OverviewPage() {
   /** Bumped after a change, to load fresh data. */
   const [version, setVersion] = useState(0);
 
-  useEffect(() => {
-    let live = true;
-    void fetchData(store).then((d) => {
-      if (live) setData(d);
-    });
-    return () => {
-      live = false;
-    };
-  }, [store, version]);
+  useEffect(() => loadWhileMounted(() => fetchData(store), setData), [store, version]);
 
   if (!data) return null;
 
@@ -77,6 +74,18 @@ export function OverviewPage() {
   return (
     <div className="space-y-12">
       <section aria-labelledby="overview-title" className="space-y-8">
+        {data.hasSample && (
+          <div role="note" className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-accent/40 bg-surface-raised px-4 py-3 text-sm">
+            <span>You’re exploring sample data: made-up transactions, so click around freely.</span>
+            <button
+              type="button"
+              onClick={() => void store.removeSampleData().then(() => navigate('add'))}
+              className="font-medium text-accent underline"
+            >
+              Remove sample data
+            </button>
+          </div>
+        )}
         <h1 id="overview-title" className="sr-only">
           Overview
         </h1>

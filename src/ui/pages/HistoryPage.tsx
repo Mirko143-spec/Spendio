@@ -10,6 +10,7 @@ import { HistoryTable } from '../HistoryTable.tsx';
 import { useRequestedWindowEnd, WINDOW } from '../period-window.ts';
 import { PeriodWindowNav } from '../PeriodWindow.tsx';
 import { hrefFor } from '../router.ts';
+import { loadWhileMounted } from '../load.ts';
 import { useStore } from '../useStore.ts';
 
 interface Data {
@@ -35,15 +36,7 @@ export function HistoryPage() {
   const requestedEnd = useRequestedWindowEnd();
   const [data, setData] = useState<Data | null>(null);
 
-  useEffect(() => {
-    let live = true;
-    void fetchData(store).then((d) => {
-      if (live) setData(d);
-    });
-    return () => {
-      live = false;
-    };
-  }, [store]);
+  useEffect(() => loadWhileMounted(() => fetchData(store), setData), [store]);
 
   if (!data) return null;
 

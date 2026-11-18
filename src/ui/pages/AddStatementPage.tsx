@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { sniffCsv } from '../../core/csv/sniff.ts';
 import { UnsupportedFormatError, type ImportResult } from '../../core/import.ts';
 import { groupForReview } from '../../core/review.ts';
 import { CsvMapper } from '../CsvMapper.tsx';
 import { ImportSummary } from '../ImportSummary.tsx';
+import { SAMPLE_CSV } from '../sample-data.ts';
 import { navigate } from '../router.ts';
 import { UploadScreen } from '../UploadScreen.tsx';
+import { loadWhileMounted } from '../load.ts';
 import { useStore } from '../useStore.ts';
 
 const newId = () => crypto.randomUUID();
@@ -23,6 +25,15 @@ type Step = { name: 'upload' } | { name: 'map'; text: string } | { name: 'done';
 export function AddStatementPage() {
   const store = useStore();
   const [step, setStep] = useState<Step>({ name: 'upload' });
+  // Sample data is only offered while there's nothing else, so it never mixes into a real budget.
+  const [empty, setEmpty] = useState(false);
+
+  useEffect(() => loadWhileMounted(() => store.countTransactions(), (n) => setEmpty(n === 0)), [store]);
+
+  async function trySample() {
+    await store.loadSampleData(SAMPLE_CSV, { now: now(), newId });
+    navigate('overview');
+  }
 
   async function importText(text: string) {
     const result = await store.importCsv(text, { now: now(), newId });
@@ -40,7 +51,7 @@ export function AddStatementPage() {
     }
   }
 
-  if (step.name === 'upload') return <UploadScreen onImport={importFile} />;
+  if (step.name === 'upload') return <UploadScreen onImport={importFile} {...(empty ? { onTrySample: trySample } : {})} />;
   if (step.name === 'map') {
     return (
       <CsvMapper
