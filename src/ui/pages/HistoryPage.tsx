@@ -4,16 +4,13 @@ import type { Category } from '../../core/categories.ts';
 import { buildHistory } from '../../core/history.ts';
 import type { Transaction } from '../../core/import.ts';
 import { periodBounds } from '../../core/period-nav.ts';
-import { shiftPeriod } from '../../core/periods.ts';
 import type { AppSettings } from '../../core/settings.ts';
 import type { SpendioStore } from '../../storage/store.ts';
-import { periodName } from '../format.ts';
 import { HistoryTable } from '../HistoryTable.tsx';
-import { hrefFor, replaceParams, useRouteParams } from '../router.ts';
+import { useRequestedWindowEnd, WINDOW } from '../period-window.ts';
+import { PeriodWindowNav } from '../PeriodWindow.tsx';
+import { hrefFor } from '../router.ts';
 import { useStore } from '../useStore.ts';
-
-/** How many periods the table shows at once. */
-export const WINDOW = 6;
 
 interface Data {
   transactions: Transaction[];
@@ -32,12 +29,10 @@ async function fetchData(store: SpendioStore): Promise<Data> {
   return { transactions, categories, budgets, settings };
 }
 
-const LABEL = /^\d{4}-(0[1-9]|1[0-2])$/;
-
 /** "Do I keep going over?": spending per category, period by period (docs/SPEC.md §12). */
 export function HistoryPage() {
   const store = useStore();
-  const params = useRouteParams();
+  const requestedEnd = useRequestedWindowEnd();
   const [data, setData] = useState<Data | null>(null);
 
   useEffect(() => {
@@ -69,12 +64,9 @@ export function HistoryPage() {
   }
 
   const bounds = periodBounds(data.transactions, new Date().toISOString().slice(0, 10), data.settings);
-  const requested = params.get('end');
-  const end = requested && LABEL.test(requested) ? requested : bounds.initial;
-  const start = shiftPeriod(end, -(WINDOW - 1));
+  const end = requestedEnd ?? bounds.initial;
   const model = buildHistory(data.transactions, data.categories, data.budgets, end, WINDOW, data.settings);
   const hasLimits = data.budgets.some((b) => b.amount !== null);
-  const button = 'rounded-lg px-2 py-1.5 text-sm font-medium text-ink-muted hover:text-ink disabled:invisible';
 
   return (
     <section aria-labelledby="history-title" className="space-y-8">
@@ -96,31 +88,7 @@ export function HistoryPage() {
         </p>
       </div>
 
-      <div className="flex items-center justify-between gap-2">
-        <button
-          type="button"
-          className={button}
-          disabled={start <= bounds.first}
-          onClick={() => replaceParams({ end: shiftPeriod(end, -WINDOW) })}
-        >
-          ‹ Earlier
-        </button>
-        <h2 className="text-center font-semibold" aria-live="polite">
-          {periodName(start)} – {periodName(end)}
-        </h2>
-        <button
-          type="button"
-          className={button}
-          disabled={end >= bounds.last}
-          // Stop at the last period with data, so the window never pages into empty months.
-          onClick={() => {
-            const later = shiftPeriod(end, WINDOW);
-            replaceParams({ end: later < bounds.last ? later : bounds.last });
-          }}
-        >
-          Later ›
-        </button>
-      </div>
+      <PeriodWindowNav end={end} bounds={bounds} />
 
       <HistoryTable model={model} />
     </section>
