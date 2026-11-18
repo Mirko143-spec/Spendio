@@ -17,6 +17,7 @@ Spendio is a budgeting web app. You upload a bank statement CSV; Spendio automat
 3. **Correct numbers over clever features.** Transfers are never spending; refunds offset spending; past budget months are never rewritten.
 4. **Pure core.** All domain logic lives in a framework-free TypeScript module with exhaustive unit tests.
 5. **Designed for later.** Sync, AI categorization, encryption and more banks must be addable without migrations that break existing data.
+6. **Generic by design.** Spendio is not tied to one bank or country. Each bank's export is a pluggable **bank format** (Nordea is the first), and everything country-specific (currency, banking days, payday, merchant rules, national ID scrubbing) sits behind a **country** definition (Sweden is the only one in v1). Bank-neutral code never names a specific bank or country.
 
 ## 3. Scope
 
