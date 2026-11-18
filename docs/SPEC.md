@@ -175,7 +175,7 @@ A user's manual category on a single transaction (`categorySource = 'manual'`) i
 |---|---|
 | `deposit` | Income |
 | `swish_out` to a person | **Swish to people**, flagged as a suggestion in review |
-| `swish_in` from a person | **Needs review** |
+| `swish_in` from a person | **Swish from people**, flagged as a suggestion in review |
 | `swish_refund` | Category of the counterparty's rule, else Needs review |
 | everything else unmatched | Needs review |
 
