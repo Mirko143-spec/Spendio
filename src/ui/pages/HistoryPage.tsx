@@ -112,7 +112,11 @@ export function HistoryPage() {
           type="button"
           className={button}
           disabled={end >= bounds.last}
-          onClick={() => replaceParams({ end: shiftPeriod(end, WINDOW) })}
+          // Stop at the last period with data, so the window never pages into empty months.
+          onClick={() => {
+            const later = shiftPeriod(end, WINDOW);
+            replaceParams({ end: later < bounds.last ? later : bounds.last });
+          }}
         >
           Later ›
         </button>

@@ -58,8 +58,10 @@ describe('HistoryPage', () => {
     await importFixture();
     const user = renderPage();
     await user.click(await screen.findByRole('button', { name: 'Later ›' }));
-    expect(screen.getByRole('heading', { name: 'December 2026 – May 2027' })).toBeInTheDocument();
-    expect(window.location.hash).toBe('#/history?end=2027-05');
+    // Stops at January 2027, the last period with data, instead of paging into empty months.
+    expect(screen.getByRole('heading', { name: 'August 2026 – January 2027' })).toBeInTheDocument();
+    expect(window.location.hash).toBe('#/history?end=2027-01');
+    expect(screen.getByRole('button', { name: 'Later ›' })).toBeDisabled();
   });
 
   it('marks months over the limit that applied then', async () => {
