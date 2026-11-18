@@ -83,6 +83,13 @@ Nordea has changed its export format before. If an export doesn't match, fall ba
 ### 4.2 Generic CSV mapper
 For non-preset files: the user maps columns → `date`, `amount` (or `debit` + `credit`), `description`, optional `balance`, and picks the date format, decimal separator and delimiter (auto-detected where possible). The mapping is saved, keyed by the header row, so the next import of the same layout is one click.
 
+- **When:** an import no format recognizes opens the mapper if the file reads as a table (≥ 2 columns, ≥ 1 data row); anything else gets an error.
+- **Detection** (`core/csv/sniff.ts`): the delimiter that splits the first lines most consistently; the date column and format from values (day-first preferred when ambiguous, as in Sweden; month-first only when a day is over 12); decimals from how numbers end; money columns from values, with header hints for debit/credit/amount/balance; the description from header hints in priority order (text, rubrik, beskrivning, description, then meddelande/specifikation), else the longest text column. **A column whose values are mostly national ID numbers is never suggested.**
+- **Mapping** (`core/csv/mapping.ts`): `{ id, headerSignature, name, delimiter, dateFormat, decimal, columns: { date, amount | debit + credit, description[], balance? }, createdAt }`. Date formats: `YYYY-MM-DD`, `YYYY/MM/DD`, `YYYYMMDD`, `DD/MM/YYYY`, `DD.MM.YYYY`, `DD-MM-YYYY`, `MM/DD/YYYY`. One mapping per header layout; validated on backup restore.
+- **Parsing** (`core/csv/generic.ts`): same contract as presets — scrubbed text, signed öre (debits are money out whether written positive or negative), bad lines reported with line numbers.
+- **As a bank format** (`core/formats/generic.ts`): id `csv:<mapping id>`, named after the bank the person gave, country Sweden (v1). Descriptions are read bank-neutrally: leading date/reference tokens are stripped so merchant rules match, and a leading YYMMDD / YYYY-MM-DD that is a plausible purchase date (0–30 days before booking) becomes the effective date. Kind is `other` (bank-specific wording like Swish is only understood by presets).
+- Imports try the presets first, then saved mappings. Forgetting a mapping keeps already imported transactions.
+
 ### 4.3 Personnummer scrubbing
 - Nordea parser drops `Avsändare` and `Mottagare` entirely.
 - Defense in depth: every text field is scrubbed for personnummer patterns (`YYMMDD-XXXX`, `YYMMDD+XXXX`, `YYYYMMDD-XXXX`, and 10/12-digit runs that form a valid date + Luhn check) before it enters the model. Matches are replaced with `[redacted]`.
