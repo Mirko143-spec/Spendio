@@ -111,3 +111,15 @@ export const KIND_LABEL_ONE: Record<ReviewGroup['kind'], string> = {
 export function counterpartyName(t: { merchantDisplay: string; counterpartyIsPerson?: boolean }): string {
   return t.counterpartyIsPerson ? tidyPersonName(t.merchantDisplay) : t.merchantDisplay;
 }
+
+const MATCH_WORDS: Record<'equals' | 'startsWith' | 'contains', string> = {
+  equals: 'is exactly',
+  startsWith: 'starts with',
+  contains: 'contains',
+};
+
+/** "Merchant is exactly TEBEX.ORG", "Merchant starts with ICA, Swish received only". */
+export function describeRule(rule: { op: 'equals' | 'startsWith' | 'contains'; value: string; kind?: ReviewGroup['kind'] }): string {
+  const scope = rule.kind ? `, ${KIND_LABEL_ONE[rule.kind]} only` : '';
+  return `Merchant ${MATCH_WORDS[rule.op]} ${rule.value}${scope}`;
+}
