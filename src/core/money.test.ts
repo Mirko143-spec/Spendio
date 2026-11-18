@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { formatAmount, parseAmount } from './money.ts';
+import { plain } from '../test-utils.ts';
 
 describe('parseAmount', () => {
   it.each([
@@ -55,7 +56,7 @@ describe('parseAmount', () => {
 });
 
 describe('formatAmount', () => {
-  const plain = (s: string) => s.replace(/[\u00A0\u202F]/g, ' ').replace(/\u2212/g, '-');
+  const plainMinus = (s: string) => plain(s).replace(/\u2212/g, '-');
 
   it.each([
     [123456, '1 234,56 kr'],
@@ -63,6 +64,6 @@ describe('formatAmount', () => {
     [0, '0,00 kr'],
     [1359200, '13 592,00 kr'],
   ])('formats %i öre as %s', (ore, expected) => {
-    expect(plain(formatAmount(ore))).toBe(expected);
+    expect(plainMinus(formatAmount(ore))).toBe(expected);
   });
 });

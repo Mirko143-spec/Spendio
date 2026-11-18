@@ -60,6 +60,8 @@ export interface ImportOptions {
   newId: () => string;
   /** Formats to try, in order. Defaults to every built-in preset. */
   formats?: readonly BankFormat[];
+  /** Categories that exist; rules for deleted ones are skipped. Omit to allow all. */
+  categoryIds?: ReadonlySet<string>;
 }
 
 export interface ImportResult {
@@ -82,7 +84,7 @@ export class UnsupportedFormatError extends Error {
 }
 
 export function importCsv(text: string, options: ImportOptions): ImportResult {
-  const { existingFingerprints, userRules = [], now, newId, formats = BANK_FORMATS } = options;
+  const { existingFingerprints, userRules = [], now, newId, formats = BANK_FORMATS, categoryIds } = options;
   const format = detectFormat(text, formats);
   if (!format) throw new UnsupportedFormatError();
   const country = countryFor(format.country);
@@ -95,7 +97,7 @@ export function importCsv(text: string, options: ImportOptions): ImportResult {
   const transactions = fresh.map((row): Transaction => {
     const described = format.describe(row.description, row.bookingDate);
     const merchant = cleanMerchant(described.counterparty);
-    const category = categorize({ kind: described.kind, merchantKey: merchant.key }, userRules, country);
+    const category = categorize({ kind: described.kind, merchantKey: merchant.key }, userRules, country, categoryIds);
     return {
       id: newId(),
       accountId,

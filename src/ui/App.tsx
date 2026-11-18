@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react';
 import { AddStatementPage } from './pages/AddStatementPage.tsx';
+import { CategoriesPage } from './pages/CategoriesPage.tsx';
 import { OverviewPage } from './pages/OverviewPage.tsx';
 import { ReviewPage } from './pages/ReviewPage.tsx';
 import { TransactionsPage } from './pages/TransactionsPage.tsx';
@@ -13,6 +14,7 @@ const ReviewPreview = import.meta.env.DEV ? lazy(() => import('./dev/ReviewPrevi
 const NAV: { route: Route; label: string }[] = [
   { route: 'overview', label: 'Overview' },
   { route: 'transactions', label: 'Transactions' },
+  { route: 'categories', label: 'Categories' },
   { route: 'add', label: 'Add statement' },
 ];
 
@@ -27,13 +29,13 @@ export function AppShell({ children, nav = true }: { children: ReactNode; nav?: 
           <span className="text-lg font-bold tracking-[-0.02em]">Spendio</span>
         </a>
         {nav && (
-          <nav aria-label="Main" className="flex gap-5 text-sm">
+          <nav aria-label="Main" className="flex flex-wrap gap-x-5 gap-y-1 text-sm">
             {NAV.map((item) => (
               <a
                 key={item.route}
                 href={hrefFor(item.route)}
                 aria-current={route === item.route ? 'page' : undefined}
-                className={route === item.route ? 'font-semibold text-ink' : 'text-ink-muted hover:text-ink'}
+                className={`whitespace-nowrap ${route === item.route ? 'font-semibold text-ink' : 'text-ink-muted hover:text-ink'}`}
               >
                 {item.label}
               </a>
@@ -81,6 +83,7 @@ function Pages() {
       {route === 'add' && <AddStatementPage key="add" />}
       {route === 'review' && <ReviewPage />}
       {route === 'transactions' && <TransactionsPage />}
+      {route === 'categories' && <CategoriesPage />}
     </AppShell>
   );
 }

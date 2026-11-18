@@ -187,3 +187,28 @@ describe('categorize on the fixture', () => {
     });
   });
 });
+
+describe('categorize with deleted categories', () => {
+  const without = (...ids: string[]) => new Set(DEFAULT_CATEGORIES.map((c) => c.id).filter((id) => !ids.includes(id)));
+
+  it('skips built-in rules whose category was deleted', () => {
+    expect(categorize(input('card', 'SAS SCANDINAVIAN'), [], undefined, without(C.travel))).toMatchObject({
+      categoryId: null,
+      source: 'none',
+    });
+    expect(categorize(input('card', 'SAS SCANDINAVIAN'), [], undefined, without()).categoryId).toBe(C.travel);
+  });
+
+  it('skips the Swish suggestions when those categories were deleted', () => {
+    const ids = without(C.swishPeople, C.swishFromPeople);
+    expect(categorize(input('swish_out', 'ANNA TESTSSON'), [], undefined, ids).categoryId).toBeNull();
+    expect(categorize(input('swish_in', 'ANNA TESTSSON'), [], undefined, ids).categoryId).toBeNull();
+  });
+
+  it('still recognizes a known business even if its category was deleted', () => {
+    expect(categorize(input('swish_out', 'AB STORSTOCKHOLMS L'), [], undefined, without(C.transport))).toMatchObject({
+      categoryId: null,
+      counterpartyIsPerson: false,
+    });
+  });
+});

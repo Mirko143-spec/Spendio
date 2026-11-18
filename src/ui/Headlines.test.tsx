@@ -7,11 +7,11 @@ import { DEFAULT_CATEGORIES } from '../core/categories.ts';
 import { buildDashboard } from '../core/dashboard.ts';
 import { importCsv } from '../core/import.ts';
 import { Headlines } from './Headlines.tsx';
+import { plain } from '../test-utils.ts';
 
 const fixture = readFileSync(join(import.meta.dirname, '../../fixtures/nordea-sample.csv'), 'utf8');
 let seq = 0;
 const { transactions } = importCsv(fixture, { existingFingerprints: new Set(), now: '2026-12-29T10:00:00.000Z', newId: () => `id-${++seq}` });
-const plain = (s: string | null) => (s ?? '').replace(/[\u00A0\u202F]/g, ' ');
 const figure = (label: string) => screen.getByText(label).parentElement!;
 /** The amount as announced to screen readers, e.g. "1 859,06 kr". */
 const amountIn = (label: string) => plain(figure(label).querySelector('[aria-label]')!.getAttribute('aria-label'));

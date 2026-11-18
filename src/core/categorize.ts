@@ -29,25 +29,34 @@ export interface Categorization {
 
 const SWISH_KINDS: ReadonlySet<TransactionKind> = new Set(['swish_out', 'swish_in', 'swish_refund']);
 
+/**
+ * @param existingCategoryIds Categories that exist. Rules and defaults pointing at a deleted
+ *   category are skipped (the transaction goes to Needs review instead of a category that is
+ *   gone). Omit to allow every category.
+ */
 export function categorize(
   input: CategorizeInput,
   userRules: readonly Rule[] = [],
   country: Country = DEFAULT_COUNTRY,
+  existingCategoryIds?: ReadonlySet<string>,
 ): Categorization {
+  const exists = (id: string) => !existingCategoryIds || existingCategoryIds.has(id);
   const isSwish = SWISH_KINDS.has(input.kind);
-  const builtin = findBestRule(country.builtinRules, input);
-  // A Swish counterparty is a business if its name says so or a built-in merchant rule knows it.
-  const person = isSwish ? { counterpartyIsPerson: !builtin && !country.looksLikeBusiness(input.merchantKey) } : {};
+  // A Swish counterparty is a business if its name says so or a built-in merchant rule knows it
+  // (even one whose category was deleted: it's still a business).
+  const knownMerchant = findBestRule(country.builtinRules, input);
+  const person = isSwish ? { counterpartyIsPerson: !knownMerchant && !country.looksLikeBusiness(input.merchantKey) } : {};
 
-  const user = findBestRule(userRules, input);
+  const user = findBestRule(userRules.filter((r) => exists(r.categoryId)), input);
   if (user) return { categoryId: user.categoryId, source: 'user_rule', suggested: false, ...person };
+  const builtin = findBestRule(country.builtinRules.filter((r) => exists(r.categoryId)), input);
   if (builtin) return { categoryId: builtin.categoryId, source: 'builtin_rule', suggested: false, ...person };
 
   if (input.kind === 'deposit') return { categoryId: CATEGORY_IDS.income, source: 'kind_default', suggested: false };
-  if (input.kind === 'swish_out' && person.counterpartyIsPerson) {
+  if (input.kind === 'swish_out' && person.counterpartyIsPerson && exists(CATEGORY_IDS.swishPeople)) {
     return { categoryId: CATEGORY_IDS.swishPeople, source: 'kind_default', suggested: true, ...person };
   }
-  if (input.kind === 'swish_in' && person.counterpartyIsPerson) {
+  if (input.kind === 'swish_in' && person.counterpartyIsPerson && exists(CATEGORY_IDS.swishFromPeople)) {
     return { categoryId: CATEGORY_IDS.swishFromPeople, source: 'kind_default', suggested: true, ...person };
   }
   return { categoryId: null, source: 'none', suggested: false, ...person };

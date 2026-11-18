@@ -5,9 +5,15 @@ import { useMemo, useSyncExternalStore } from 'react';
  * Query parameters after the route (`#/transactions?period=2026-11&category=gaming`) hold page
  * state such as filters, so a filtered view can be bookmarked or linked to.
  */
-export type Route = 'overview' | 'add' | 'review' | 'transactions';
+export type Route = 'overview' | 'add' | 'review' | 'transactions' | 'categories';
 
-const PATHS: Record<Route, string> = { overview: '#/', add: '#/add', review: '#/review', transactions: '#/transactions' };
+const PATHS: Record<Route, string> = {
+  overview: '#/',
+  add: '#/add',
+  review: '#/review',
+  transactions: '#/transactions',
+  categories: '#/categories',
+};
 
 /** Fired when params are replaced in place (replaceState doesn't fire `hashchange`). */
 const REPLACED = 'spendio:route-replaced';

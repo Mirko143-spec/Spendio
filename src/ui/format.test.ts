@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { amountParts, dateRange, groupContext, groupTitle, listNames, periodName } from './format.ts';
+import { amountParts, dateRange, describeRule, groupContext, groupTitle, listNames, periodName } from './format.ts';
+import { plain } from '../test-utils.ts';
 
 describe('amountParts', () => {
   it('splits sign, Swedish-formatted number and currency', () => {
-    const plain = (s: string) => s.replace(/[\u00A0\u202F]/g, ' ');
     const out = amountParts(-123456);
     expect([out.sign, plain(out.number), out.currency]).toEqual(['−', '1 234,56', 'kr']);
     expect(amountParts(12500).sign).toBe('+');
@@ -59,5 +59,16 @@ describe('periodName', () => {
   it('names a period label', () => {
     expect(periodName('2026-11')).toBe('November 2026');
     expect(periodName('2027-01', true)).toBe('Jan');
+  });
+});
+
+describe('describeRule', () => {
+  it('describes a rule in plain language', () => {
+    expect(describeRule({ op: 'equals', value: 'TEBEX.ORG' })).toBe('Merchant is exactly TEBEX.ORG');
+    expect(describeRule({ op: 'startsWith', value: 'ICA' })).toBe('Merchant starts with ICA');
+    expect(describeRule({ op: 'contains', value: 'PIZZERIA' })).toBe('Merchant contains PIZZERIA');
+    expect(describeRule({ op: 'equals', value: 'ANNA TESTSSON', kind: 'swish_in' })).toBe(
+      'Merchant is exactly ANNA TESTSSON, Swish received only',
+    );
   });
 });
