@@ -146,7 +146,7 @@ function SavingsTable({ model }: { model: SavingsModel }) {
           <tbody>
             {model.periods.map((p) => (
               <tr key={p.period.label}>
-                <th scope="row" className="sticky left-0 border-b border-line bg-surface py-2 pr-3 text-left font-medium">
+                <th scope="row" className="sticky left-0 border-b border-line bg-surface py-2 pr-3 text-left font-medium whitespace-nowrap">
                   {periodName(p.period.label)}
                 </th>
                 <td className={cell}>{wholeAmount(p.income)}</td>
