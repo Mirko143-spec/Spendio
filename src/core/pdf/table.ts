@@ -1,5 +1,5 @@
 /**
- * Turns a statement PDF's text into a table (docs/SPEC.md §4.3), so PDFs go through the same
+ * Turns a statement PDF's text into a table (docs/SPEC.md §4.5), so PDFs go through the same
  * pipeline as CSV files: bank presets, the column mapper, dedup and categorization.
  *
  * A text PDF has no rows or columns, only pieces of text placed on the page. Statements still

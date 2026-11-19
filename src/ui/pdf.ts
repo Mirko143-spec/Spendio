@@ -1,7 +1,7 @@
 import { statementTable, toDelimited, type PdfPage } from '../core/pdf/table.ts';
 
 /**
- * Reading a statement PDF in the browser (docs/SPEC.md §4.3). pdf.js does the PDF work in a web
+ * Reading a statement PDF in the browser (docs/SPEC.md §4.5). pdf.js does the PDF work in a web
  * worker served from this site, and is only downloaded when someone picks a PDF. Nothing is
  * fetched from elsewhere; only the transaction table is kept, never the page's other text
  * (name, address, account numbers).
