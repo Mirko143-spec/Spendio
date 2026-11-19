@@ -1,0 +1,45 @@
+# Deploy to the self-hosted Kubernetes cluster (same setup as the author's other sites):
+# branches and PRs only test-build the image; main publishes it and upgrades the Helm release.
+steps:
+  - name: build-dry-run
+    image: woodpeckerci/plugin-kaniko:2.1.0
+    settings:
+      dry-run: true
+      repo: spendio
+      tags: git-${CI_COMMIT_SHA:0:4}
+      dockerfile: Dockerfile
+    when:
+      - event: [pull_request, push]
+        branch:
+          exclude: main
+  - name: publish
+    image: woodpeckerci/plugin-kaniko:2.1.0
+    settings:
+      repo: spendio
+      tags: git-${CI_COMMIT_SHA:0:4}
+      dockerfile: Dockerfile
+      registry: registry.rojandinc.se
+      insecure: true
+    when:
+      - event: [push]
+        branch: [main]
+  - name: deploy
+    image: pelotech/drone-helm3
+    settings:
+      mode: upgrade
+      namespace: mirko
+      chart: rojandinc/web
+      chart_version: 0.1.0
+      add_repos: ["rojandinc=https://rojandinc.github.io/helm-charts"]
+      release: spendio
+      skip_tls_verify: true
+      values: "image.tag=git-${CI_COMMIT_SHA:0:4}"
+      values_files:
+        - "environment/values.yaml"
+      api_server: https://kubernetes.default
+      kubernetes_token:
+        from_secret: kubernetes_token
+    depends_on: [publish]
+    when:
+      - event: [push]
+        branch: [main]
