@@ -10,6 +10,7 @@ dist/
 *.xlsx
 *.xls
 *.pdf
+!fixtures/*.pdf
 spendio-backup-*.json
 
 # Env & OS
