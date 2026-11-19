@@ -2,6 +2,7 @@ import { useMemo, useState, type ReactNode } from 'react';
 import { Amount } from './Amount.tsx';
 import { demoRows } from './landing-demo.ts';
 import { hrefFor } from './router.ts';
+import { sampleDataError } from './sample-data.ts';
 
 interface LandingProps {
   /** Someone with data gets a way back to their overview instead of the sample. */
@@ -14,6 +15,7 @@ const secondary = 'rounded-lg border border-line px-5 py-2.5 font-semibold hover
 
 function Actions({ hasData, onTrySample }: LandingProps) {
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   if (hasData) {
     return (
       <div className="flex flex-wrap gap-3">
@@ -24,21 +26,34 @@ function Actions({ hasData, onTrySample }: LandingProps) {
     );
   }
   return (
-    <div className="flex flex-wrap gap-3">
-      <button
-        type="button"
-        disabled={busy}
-        className={primary}
-        onClick={() => {
-          setBusy(true);
-          void onTrySample().finally(() => setBusy(false));
-        }}
-      >
-        {busy ? 'Loading sample data…' : 'Try it with sample data'}
-      </button>
-      <a href={hrefFor('add')} className={secondary}>
-        Add your own statement
-      </a>
+    <div>
+      <div className="flex flex-wrap gap-3">
+        <button
+          type="button"
+          disabled={busy}
+          className={primary}
+          onClick={() => {
+            setBusy(true);
+            setError(null);
+            onTrySample()
+              .catch((e: unknown) => {
+                console.error(e);
+                setError(sampleDataError(e));
+              })
+              .finally(() => setBusy(false));
+          }}
+        >
+          {busy ? 'Loading sample data…' : 'Try it with sample data'}
+        </button>
+        <a href={hrefFor('add')} className={secondary}>
+          Add your own statement
+        </a>
+      </div>
+      {error && (
+        <p role="alert" className="mt-4 max-w-prose font-medium text-danger">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

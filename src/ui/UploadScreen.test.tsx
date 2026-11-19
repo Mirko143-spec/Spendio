@@ -99,3 +99,12 @@ describe('UploadScreen PDF statements', () => {
     expect(onImport).not.toHaveBeenCalled();
   });
 });
+
+describe('UploadScreen when the sample can’t be loaded', () => {
+  it('shows the reason instead of doing nothing', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    render(<UploadScreen onImport={vi.fn()} onTrySample={() => Promise.reject(new TypeError('x is not a function'))} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Try Spendio with sample data' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('(TypeError: x is not a function)');
+  });
+});

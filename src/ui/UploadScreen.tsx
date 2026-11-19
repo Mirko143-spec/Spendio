@@ -2,6 +2,7 @@ import { useId, useState, type DragEvent } from 'react';
 import { BANK_FORMATS } from '../core/formats/index.ts';
 import { UnsupportedFormatError } from '../core/import.ts';
 import { listNames } from './format.ts';
+import { sampleDataError } from './sample-data.ts';
 import { isPdf, MAX_PDF_PAGES, PdfReadError, readPdfStatement, type PdfProblem } from './pdf.ts';
 
 // A bank can have several layouts (e.g. CSV and PDF); list each bank once.
@@ -115,7 +116,16 @@ export function UploadScreen({ onImport, onTrySample, readPdf = readPdfStatement
           <button
             type="button"
             disabled={busy}
-            onClick={() => void onTrySample()}
+            onClick={() => {
+              setError(null);
+              setBusy(true);
+              onTrySample()
+                .catch((e: unknown) => {
+                  console.error(e);
+                  setError(sampleDataError(e));
+                })
+                .finally(() => setBusy(false));
+            }}
             className="font-medium text-accent underline"
           >
             Try Spendio with sample data

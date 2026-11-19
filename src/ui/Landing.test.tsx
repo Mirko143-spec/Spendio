@@ -32,3 +32,17 @@ describe('Landing', () => {
     expect(screen.getAllByRole('link', { name: 'Open your overview' })[0]).toHaveAttribute('href', '#/');
   });
 });
+
+describe('Landing when the sample can’t be loaded', () => {
+  it('says why instead of doing nothing, and lets the person try again', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const onTrySample = vi.fn().mockRejectedValueOnce(Object.assign(new Error('The operation is insecure.'), { name: 'SecurityError' }));
+    render(<Landing hasData={false} onTrySample={onTrySample} />);
+    const button = screen.getAllByRole('button', { name: 'Try it with sample data' })[0]!;
+    await userEvent.click(button);
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'The sample data couldn’t be loaded in this browser (SecurityError: The operation is insecure.). Reload the page and try again.',
+    );
+    expect(button).toBeEnabled();
+  });
+});

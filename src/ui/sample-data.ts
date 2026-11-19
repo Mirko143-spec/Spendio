@@ -3,3 +3,9 @@
 import sampleCsv from '../../fixtures/demo-statement.csv?raw';
 
 export const SAMPLE_CSV: string = sampleCsv;
+
+/** What to show when loading the sample fails, including the browser's own reason. */
+export function sampleDataError(error: unknown): string {
+  const reason = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
+  return `The sample data couldn’t be loaded in this browser (${reason}). Reload the page and try again.`;
+}
