@@ -42,7 +42,7 @@ Spendio is a budgeting web app. You upload a bank statement CSV; Spendio automat
 - Optional AI categorization for leftover transactions (bring-your-own-key, or hosted; undecided). Only cleaned merchant names would be sent, never amounts or account data, and only with explicit opt-in.
 - Optional accounts + sync across devices (backend)
 - Multiple accounts (e.g. savings, credit card), multi-currency
-- More bank presets, PDF statements
+- More bank presets (CSV and PDF layouts)
 - More countries (a new `country/` definition: currency, banking days, payday, merchant rules, ID scrubbing)
 - Split transactions, budget rollover, per-month limit overrides
 - Swedish UI language
@@ -97,6 +97,16 @@ For non-preset files: the user maps columns → `date`, `amount` (or `debit` + `
 
 ### 4.4 Amounts
 Stored as **integer öre** (`-129,00` → `-12900`) to avoid floating-point errors. Displayed in Swedish format: `1 234,56 kr`.
+
+### 4.5 PDF statements
+A text PDF has no rows or columns, only text placed on pages, so a PDF is first turned into a table and then goes through the **same pipeline as a CSV** (presets, the mapper, dedup, categorization). No bank-specific PDF code beyond a layout preset.
+- **Reading** (`ui/pdf.ts`): pdf.js in a web worker served from the site, downloaded only when a PDF is picked (lazy chunks). No eval, no font loading, no fetching, so the CSP is unchanged. A file is a PDF by its first bytes (`%PDF-`), not its name. At most 100 pages.
+- **Table** (`core/pdf/table.ts`, pure): group text into lines by position; the **header** is the first line with ≥3 cells, no digits and dated lines right below it; every later line (all pages) is sorted into the header's columns by horizontal overlap (else nearest), and only lines with a date in the date column are kept. This drops everything around the table: account details (name, account number), month headings, pending rows, totals, page footers. The result is `;`-separated text with the PDF's own header.
+- **Layouts**: a PDF table whose header a preset knows imports directly; any other bank's PDF goes to the column mapper once, like a CSV. **Nordea PDF** ("Kontohändelser", observed 2026-11-19): `Datum | Namn | Belopp | Saldo`, ISO dates, decimal comma, space thousands separator; "Namn" holds the CSV's "Rubrik" text, so Nordea's description reader applies. It shares the CSV preset's `id`, so CSV and PDF are one account and overlapping files dedupe.
+- **Pending rows** ("Reserverat") are skipped: they aren't booked and would return as duplicates. Nordea's totals box (opening balance, money in/out) *includes* pending rows, so it isn't used as a check; the running balance is.
+- **Errors**: password-protected, invalid, image-only (scanned), no transaction table, too long, each with its own message. Other failures (e.g. the reader not starting) are reported as is, never blamed on the file.
+- **Hosting**: the worker is an `.mjs` file; nginx's stock types lack `.mjs`, so `docker/nginx.conf` adds `text/javascript` for it (with `nosniff`, a wrong type stops the worker).
+- **Tests** use `fixtures/nordea-pdf-sample.pdf`, an invented statement made by `fixtures/make-nordea-pdf.mjs`. PDFs are git-ignored outside `fixtures/`, and fixture PDFs are checked for personnummer like CSVs.
 
 ## 5. Description parsing and merchant cleanup
 
@@ -263,7 +273,7 @@ What Spendio is, for someone who has never seen it. First-time visitors (no tran
 Clicking a category anywhere (chart bars, budget rows) → Transactions filtered by that category and period; "All spending" → all transactions in the period.
 
 ### Other pages
-- **Upload** (file picker + drag and drop; preset banks listed from the format registry; clear errors for files that aren't a table, empty or oversized files) → **Set up this file's layout** only for a table no format recognizes (bank name first, the file's first rows, column pickers labelled with example values, one amount column or money out / money in, date/decimal/separator formats, a live preview of the first 5 rows as they will import and of lines that can't be read; "Save and import" enabled once named, complete and at least one row reads) → **Import summary** (new / already imported / lines that couldn't be read, with line numbers) → **Review** (one group per merchant *and* kind, so "Swish to Anna" and "Swish from Anna" are separate decisions; sorted by absolute total; category dropdown pre-filled with any suggestion + "Remember" checkbox; "Skip for now"). The flow then continues to the overview.
+- **Upload** (file picker + drag and drop; CSV or PDF; preset banks listed from the format registry; clear errors for files that aren't a table, empty or oversized files) → **Set up this file's layout** only for a table no format recognizes (bank name first, the file's first rows, column pickers labelled with example values, one amount column or money out / money in, date/decimal/separator formats, a live preview of the first 5 rows as they will import and of lines that can't be read; "Save and import" enabled once named, complete and at least one row reads) → **Import summary** (new / already imported / lines that couldn't be read, with line numbers) → **Review** (one group per merchant *and* kind, so "Swish to Anna" and "Swish from Anna" are separate decisions; sorted by absolute total; category dropdown pre-filled with any suggestion + "Remember" checkbox; "Skip for now"). The flow then continues to the overview.
 - **Sample data:** while there is no data at all, the landing page ("Try it with sample data") and "Add statement" ("Try Spendio with sample data") offer it: an invented statement for a made-up person (`fixtures/demo-statement.csv`: a Gothenburg salary earner over three paydays, fake names, no personnummer; generated from scratch, not modelled on any real statement, and separate from the test fixtures) bundled into the app and imported with the label "Sample data". The overview then shows "You’re exploring sample data" with **Remove sample data** (removes only sample imports and returns to Add statement); Settings lists it as "Sample data". It lets someone explore every screen without a bank export, e.g. on the public site.
 - Person names (Swish counterparties) are tidied for display only: `DOE,JOHN` → "John Doe", all-caps names re-cased. Rules keep matching the original text.
 - **Transactions**: one row of filters — period (periods with data, newest first, or all), category (or Needs review), type, and search (merchant, tidied person name, bank text; all words must match) — kept in the URL (`#/transactions?period=…&category=…&kind=…&q=…`) so filtered views survive reloads and can be linked to. Newest first, 100 rows at a time ("Show more"). Each row: readable title, date and type, amount, and an inline category picker that asks "Only this one" or "All from <merchant>" (§7.5).

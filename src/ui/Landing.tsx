@@ -84,8 +84,8 @@ function Demo() {
 
 const STEPS: { title: string; text: string }[] = [
   {
-    title: 'Export your transactions',
-    text: 'In your internet bank, export your account’s transactions as a CSV file. Spendio reads common bank layouts directly; for any other bank you match up the columns once, and it remembers.',
+    title: 'Download your transactions',
+    text: 'In your internet bank, download your account’s transactions as a CSV or PDF file. Spendio reads common bank layouts directly; for any other bank you match up the columns once, and it remembers.',
   },
   {
     title: 'Spendio sorts them',
@@ -165,7 +165,7 @@ export function Landing(props: LandingProps) {
       <Section id="sweden-title" title="Made for Sweden, for now">
         <p className="max-w-prose text-ink-muted">
           Amounts are in kronor, and budget months follow Swedish paydays and public holidays. Any bank’s CSV export
-          works.
+          works, and so do PDF statements that list your transactions as text.
         </p>
       </Section>
 

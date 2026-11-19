@@ -34,6 +34,6 @@ The image serves the static build with nginx on port 80, including the security 
 
 ## Privacy rules for contributors
 
-- Never commit real bank statements. `.gitignore` blocks `*.csv` outside `fixtures/`.
+- Never commit real bank statements. `.gitignore` blocks `*.csv` and `*.pdf` outside `fixtures/`, and the fixture tests reject anything shaped like a personnummer in them.
 - Fixtures are synthetic only. `fixtures/fixtures.test.ts` fails if anything personnummer-shaped shows up.
 - Personnummer are dropped on import and never stored, displayed or logged.

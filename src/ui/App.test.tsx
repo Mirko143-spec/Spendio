@@ -24,7 +24,7 @@ afterEach(async () => {
 });
 
 const upload = async (text: string) =>
-  userEvent.upload(await screen.findByLabelText('Choose a CSV file'), new File([text], 'statement.csv', { type: 'text/csv' }));
+  userEvent.upload(await screen.findByLabelText('Choose a CSV or PDF file'), new File([text], 'statement.csv', { type: 'text/csv' }));
 
 describe('App', () => {
   it('shows a first-time visitor the landing page, without the app menu', async () => {
@@ -94,7 +94,7 @@ describe('App', () => {
     window.location.hash = '#/add';
     render(<App dbName={dbName()} />);
     await upload('This is not a statement');
-    expect(await screen.findByRole('alert')).toHaveTextContent('This doesn’t look like a bank statement export');
+    expect(await screen.findByRole('alert')).toHaveTextContent('This doesn’t look like a bank statement');
   });
 
   it('offers sample data on the landing page, and lands on the overview with it', async () => {
@@ -108,7 +108,7 @@ describe('App', () => {
     store.close();
 
     await user.click(screen.getByRole('link', { name: 'Add statement' }));
-    await screen.findByLabelText('Choose a CSV file');
+    await screen.findByLabelText('Choose a CSV or PDF file');
     expect(screen.queryByRole('button', { name: /sample data/ })).not.toBeInTheDocument();
   });
 

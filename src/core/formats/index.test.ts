@@ -17,7 +17,9 @@ describe('detectFormat', () => {
     expect(detectFormat('anything', [always, NORDEA])).toBe(always);
   });
 
-  it('registers each format once with a unique id', () => {
-    expect(new Set(BANK_FORMATS.map((f) => f.id)).size).toBe(BANK_FORMATS.length);
+  it('registers each layout once; layouts sharing an id are the same bank', () => {
+    expect(new Set(BANK_FORMATS).size).toBe(BANK_FORMATS.length);
+    // A bank can have several layouts (CSV, PDF). They share the id, so they're one account.
+    for (const a of BANK_FORMATS) for (const b of BANK_FORMATS) if (a.id === b.id) expect(a.name).toBe(b.name);
   });
 });
