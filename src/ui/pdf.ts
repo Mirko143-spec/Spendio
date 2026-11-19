@@ -34,12 +34,14 @@ export interface PdfJs {
     isEvalSupported: boolean;
     disableFontFace: boolean;
     useWorkerFetch: boolean;
+    verbosity: number;
   }): {
     promise: Promise<{
       numPages: number;
       getPage(n: number): Promise<{ getTextContent(): Promise<{ items: readonly object[] }> }>;
-      destroy(): Promise<void>;
     }>;
+    /** Closes the document and frees the worker's copy of it. */
+    destroy(): Promise<void>;
   };
 }
 
@@ -52,11 +54,14 @@ const isTextItem = (item: object): item is TextItem => 'str' in item && 'transfo
 
 /** Each page's positioned text. */
 export async function readPdfPages(pdfjs: PdfJs, data: Uint8Array): Promise<PdfPage[]> {
+  // No eval (the CSP forbids it), no font loading or fetching: only the text is needed. Font-data
+  // warnings are about drawing text, which never happens here, so only errors are logged.
+  const task = pdfjs.getDocument({ data, isEvalSupported: false, disableFontFace: true, useWorkerFetch: false, verbosity: 0 });
   let doc;
   try {
-    // No eval (the CSP forbids it), no font loading or fetching: only the text is needed.
-    doc = await pdfjs.getDocument({ data, isEvalSupported: false, disableFontFace: true, useWorkerFetch: false }).promise;
+    doc = await task.promise;
   } catch (e) {
+    await task.destroy();
     throw new PdfReadError(e instanceof Error && e.name === 'PasswordException' ? 'password' : 'damaged');
   }
   try {
@@ -68,7 +73,7 @@ export async function readPdfPages(pdfjs: PdfJs, data: Uint8Array): Promise<PdfP
     }
     return pages;
   } finally {
-    await doc.destroy();
+    await task.destroy();
   }
 }
 

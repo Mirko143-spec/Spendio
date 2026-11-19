@@ -14,8 +14,8 @@ function fakePdfJs(pages: object[][], fail?: string): PdfJs & { destroy: ReturnT
         : Promise.resolve({
             numPages: pages.length,
             getPage: async (n: number) => ({ getTextContent: async () => ({ items: pages[n - 1]! }) }),
-            destroy,
           }),
+      destroy,
     }),
   };
 }
