@@ -47,6 +47,8 @@ describe('readPdfPages', () => {
   it('says why a PDF can’t be opened', async () => {
     expect(await problem(readPdfPages(fakePdfJs([], 'PasswordException'), bytes('%PDF-')))).toBe('password');
     expect(await problem(readPdfPages(fakePdfJs([], 'InvalidPDFException'), bytes('%PDF-')))).toBe('damaged');
+    // A failure of the reader itself isn't blamed on the file.
+    expect(await problem(readPdfPages(fakePdfJs([], 'WorkerError'), bytes('%PDF-')))).toBe('WorkerError: WorkerError');
     const huge = fakePdfJs(Array.from({ length: MAX_PDF_PAGES + 1 }, () => []));
     expect(await problem(readPdfPages(huge, bytes('%PDF-')))).toBe('too-long');
     expect(huge.destroy).toHaveBeenCalled();

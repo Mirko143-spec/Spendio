@@ -62,7 +62,11 @@ export async function readPdfPages(pdfjs: PdfJs, data: Uint8Array): Promise<PdfP
     doc = await task.promise;
   } catch (e) {
     await task.destroy();
-    throw new PdfReadError(e instanceof Error && e.name === 'PasswordException' ? 'password' : 'damaged');
+    const name = e instanceof Error ? e.name : '';
+    if (name === 'PasswordException') throw new PdfReadError('password');
+    if (name === 'InvalidPDFException') throw new PdfReadError('damaged');
+    // Anything else (e.g. the reader itself failing to start) is not the file's fault: report it as is.
+    throw e;
   }
   try {
     if (doc.numPages > MAX_PDF_PAGES) throw new PdfReadError('too-long');
