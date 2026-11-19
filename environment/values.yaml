@@ -1,0 +1,30 @@
+image:
+  repository: registry.home/spendio
+  tag: latest
+ingress:
+  enabled: true
+  className: traefik
+  annotations:
+    # external-dns creates the DNS records in Cloudflare (proxied, through the tunnel).
+    # Requires the spendio.se zone to be on Cloudflare; see README "Deployment".
+    external-dns.kubernetes.io/cloudflare-proxied: "true"
+    external-dns.kubernetes.io/target: tunnel.rojandinc.se
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+  hosts:
+    - host: spendio.se
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+    - host: www.spendio.se
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+service:
+  port: 80
+resources:
+  requests:
+    cpu: 10m
+    memory: 64Mi
+autoscaling:
+  enabled: false

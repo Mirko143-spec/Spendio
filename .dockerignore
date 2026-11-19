@@ -7,4 +7,6 @@ dist
 # Keep real statements out of the build context
 *.csv
 !fixtures/*.csv
+*.pdf
+!fixtures/*.pdf
 spendio-backup-*.json

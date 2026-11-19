@@ -1,9 +1,11 @@
 FROM node:22-alpine AS builder
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci
+# Only what the build needs: tests, lint and typecheck run in CI, not in the image build.
+# Far fewer files keeps the build (and kaniko's filesystem snapshots) small enough for the cluster.
+RUN npm ci --omit=dev
 COPY . .
-RUN npm run build
+RUN npx vite build
 
 FROM nginx:1.29-alpine
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
