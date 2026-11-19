@@ -60,7 +60,11 @@ const SEEDS: Record<string, Seed[]> = {
   [CATEGORY_IDS.entertainment]: [
     ['startsWith', 'FILMSTADEN'], ['startsWith', 'SF BIO'], ['startsWith', 'TICKETMASTER'], ['startsWith', 'TICKSTER'],
   ],
-  [CATEGORY_IDS.savings]: [['startsWith', 'LYSA']],
+  [CATEGORY_IDS.savings]: [
+    ['startsWith', 'LYSA'],
+    ['startsWith', 'AVANZA'],
+    ['startsWith', 'NORDNET'],
+  ],
   [CATEGORY_IDS.income]: [['equals', 'STUDIESTÖD'], ['equals', 'STUDIESTOD'], ['startsWith', 'LÖN']],
 };
 

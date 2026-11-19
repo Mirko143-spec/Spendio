@@ -54,6 +54,8 @@ describe('categorize with built-in rules', () => {
     ['card', 'KRONANS APOTEK', C.health],
     ['autogiro', 'Lysa Spar', C.savings],
     ['other', 'LYSA', C.savings],
+    ['autogiro', 'AVANZA', C.savings],
+    ['other', 'NORDNET', C.savings],
     ['other', 'Studiestöd', C.income],
   ] as const)('%s %s → %s', (kind, name, categoryId) => {
     expect(categorize(input(kind, name))).toMatchObject({ categoryId, source: 'builtin_rule', suggested: false });

@@ -25,8 +25,9 @@ describe('fixtures', () => {
   });
 });
 
-describe('nordea-sample.csv', () => {
-  const text = readFileSync(join(dir, 'nordea-sample.csv'), 'utf8');
+// The test fixture, and the invented statement the website loads as sample data.
+describe.each(['nordea-sample.csv', 'demo-statement.csv'])('%s', (file) => {
+  const text = readFileSync(join(dir, file), 'utf8');
   const lines = text.split('\n');
 
   it('matches the real Nordea export quirks', () => {
