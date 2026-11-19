@@ -3,7 +3,8 @@ import { BANK_FORMATS } from '../core/formats/index.ts';
 import { UnsupportedFormatError } from '../core/import.ts';
 import { listNames } from './format.ts';
 
-const SUPPORTED_BANKS = listNames(BANK_FORMATS.map((f) => f.name));
+// A bank can have several layouts (e.g. CSV and PDF); list each bank once.
+const SUPPORTED_BANKS = listNames([...new Set(BANK_FORMATS.map((f) => f.name))]);
 
 /** Larger than any plausible statement export; protects the tab from reading huge files. */
 export const MAX_FILE_BYTES = 10 * 1024 * 1024;
