@@ -10,8 +10,8 @@ describe('Landing', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'See where your money goes.' })).toBeInTheDocument();
     const demo = screen.getByRole('figure');
     expect(within(demo).getAllByRole('listitem')).toHaveLength(5);
-    expect(within(demo).getAllByRole('listitem')[0]).toHaveTextContent('Kortköp 261103 Spotify P1234ABCD5');
-    expect(within(demo).getAllByRole('listitem')[0]).toHaveTextContent('Subscriptions');
+    expect(within(demo).getAllByRole('listitem')[0]).toHaveTextContent('Kortköp 260928 H&M SE0412');
+    expect(within(demo).getAllByRole('listitem')[0]).toHaveTextContent('Shopping');
     for (const name of ['How it works', 'What you get', 'Your data stays with you', 'Made for Sweden, for now']) {
       expect(screen.getByRole('heading', { level: 2, name })).toBeInTheDocument();
     }

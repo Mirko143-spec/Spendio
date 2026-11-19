@@ -16,11 +16,11 @@ export interface DemoRow {
 // Lines from the sample statement that show what sorting does: reference codes stripped,
 // savings kept apart from spending, money back from a friend lowering spending.
 const PICKS = [
-  'Kortköp 261103 Spotify P1234ABCD5',
-  'Kortköp 261019 ICA SUPERMARKET TESTBY',
-  'Kortköp 261023 Espresso House 123',
-  'Autogiro Lysa Spar',
-  'Swish inbetalning ANNA TESTSSON',
+  'Kortköp 260928 H&M SE0412',
+  'Kortköp 261116 WILLYS GBG LINNE',
+  'Kortköp 261002 FOODORA AB',
+  'Autogiro Avanza',
+  'Swish inbetalning OSKAR TESTBERG',
 ];
 
 /**
