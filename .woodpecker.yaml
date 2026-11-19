@@ -1,13 +1,23 @@
 # Deploy to the self-hosted Kubernetes cluster (same setup as the author's other sites):
 # branches and PRs only test-build the image; main publishes it and upgrades the Helm release.
+#
+# The site is built in a plain Node step and kaniko only packages nginx + the finished files
+# (docker/Dockerfile.prebuilt). Building Node inside kaniko was OOM-killed on the cluster.
 steps:
+  - name: build-app
+    image: node:22-alpine
+    commands:
+      # Build packages only: tests, lint and typecheck run in GitHub Actions.
+      - npm ci --omit=dev
+      - npx vite build --outDir build
   - name: build-dry-run
     image: woodpeckerci/plugin-kaniko:2.1.0
     settings:
       dry-run: true
       repo: spendio
       tags: git-${CI_COMMIT_SHA:0:4}
-      dockerfile: Dockerfile
+      dockerfile: docker/Dockerfile.prebuilt
+    depends_on: [build-app]
     when:
       - event: [pull_request, push]
         branch:
@@ -17,9 +27,10 @@ steps:
     settings:
       repo: spendio
       tags: git-${CI_COMMIT_SHA:0:4}
-      dockerfile: Dockerfile
+      dockerfile: docker/Dockerfile.prebuilt
       registry: registry.rojandinc.se
       insecure: true
+    depends_on: [build-app]
     when:
       - event: [push]
         branch: [main]
