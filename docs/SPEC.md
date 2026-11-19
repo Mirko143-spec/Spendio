@@ -98,6 +98,16 @@ For non-preset files: the user maps columns → `date`, `amount` (or `debit` + `
 ### 4.4 Amounts
 Stored as **integer öre** (`-129,00` → `-12900`) to avoid floating-point errors. Displayed in Swedish format: `1 234,56 kr`.
 
+### 4.5 PDF statements
+A text PDF has no rows or columns, only text placed on pages, so a PDF is first turned into a table and then goes through the **same pipeline as a CSV** (presets, the mapper, dedup, categorization). No bank-specific PDF code beyond a layout preset.
+- **Reading** (`ui/pdf.ts`): pdf.js in a web worker served from the site, downloaded only when a PDF is picked (lazy chunks). No eval, no font loading, no fetching, so the CSP is unchanged. A file is a PDF by its first bytes (`%PDF-`), not its name. At most 100 pages.
+- **Table** (`core/pdf/table.ts`, pure): group text into lines by position; the **header** is the first line with ≥3 cells, no digits and dated lines right below it; every later line (all pages) is sorted into the header's columns by horizontal overlap (else nearest), and only lines with a date in the date column are kept. This drops everything around the table: account details (name, account number), month headings, pending rows, totals, page footers. The result is `;`-separated text with the PDF's own header.
+- **Layouts**: a PDF table whose header a preset knows imports directly; any other bank's PDF goes to the column mapper once, like a CSV. **Nordea PDF** ("Kontohändelser", observed 2026-11-19): `Datum | Namn | Belopp | Saldo`, ISO dates, decimal comma, space thousands separator; "Namn" holds the CSV's "Rubrik" text, so Nordea's description reader applies. It shares the CSV preset's `id`, so CSV and PDF are one account and overlapping files dedupe.
+- **Pending rows** ("Reserverat") are skipped: they aren't booked and would return as duplicates. Nordea's totals box (opening balance, money in/out) *includes* pending rows, so it isn't used as a check; the running balance is.
+- **Errors**: password-protected, invalid, image-only (scanned), no transaction table, too long, each with its own message. Other failures (e.g. the reader not starting) are reported as is, never blamed on the file.
+- **Hosting**: the worker is an `.mjs` file; nginx's stock types lack `.mjs`, so `docker/nginx.conf` adds `text/javascript` for it (with `nosniff`, a wrong type stops the worker).
+- **Tests** use `fixtures/nordea-pdf-sample.pdf`, an invented statement made by `fixtures/make-nordea-pdf.mjs`. PDFs are git-ignored outside `fixtures/`, and fixture PDFs are checked for personnummer like CSVs.
+
 ## 5. Description parsing and merchant cleanup
 
 `Rubrik` is parsed into `kind`, optional `purchaseDate`, and a cleaned `merchant`.
