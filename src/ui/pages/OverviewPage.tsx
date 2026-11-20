@@ -14,6 +14,7 @@ import { PeriodSwitcher } from '../PeriodSwitcher.tsx';
 import { hrefFor, navigate } from '../router.ts';
 import { SpendingChart } from '../SpendingChart.tsx';
 import { loadWhileMounted } from '../load.ts';
+import { newId } from '../new-id.ts';
 import { useStore } from '../useStore.ts';
 
 interface Data {
@@ -108,7 +109,7 @@ export function OverviewPage() {
         model={model}
         categories={data.categories}
         onSetLimit={async (categoryId, amount) => {
-          await store.setBudgetLimit(categoryId, amount, shown, () => crypto.randomUUID());
+          await store.setBudgetLimit(categoryId, amount, shown, newId);
           setVersion((v) => v + 1);
         }}
       />

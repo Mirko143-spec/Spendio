@@ -4,6 +4,7 @@ import { groupForReview, type ReviewGroup } from '../../core/review.ts';
 import { ReviewScreen } from '../ReviewScreen.tsx';
 import { navigate } from '../router.ts';
 import { loadWhileMounted } from '../load.ts';
+import { newId } from '../new-id.ts';
 import { useStore } from '../useStore.ts';
 
 /** Everything waiting for a category, one decision per merchant. */
@@ -27,7 +28,7 @@ export function ReviewPage() {
       categories={data.categories}
       onSave={(decisions) =>
         void store
-          .applyReviewDecisions(decisions, { now: new Date().toISOString(), newId: () => crypto.randomUUID() })
+          .applyReviewDecisions(decisions, { now: new Date().toISOString(), newId: newId })
           .then(() => navigate('overview'))
       }
       onSkip={() => navigate('overview')}

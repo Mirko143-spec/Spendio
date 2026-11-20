@@ -3,6 +3,7 @@ import { Landing } from '../Landing.tsx';
 import { loadWhileMounted } from '../load.ts';
 import { navigate } from '../router.ts';
 import { SAMPLE_CSV } from '../sample-data.ts';
+import { newId } from '../new-id.ts';
 import { useStore } from '../useStore.ts';
 
 /** The landing page: what Spendio is, and a way in (docs/SPEC.md §12). */
@@ -13,7 +14,7 @@ export function WelcomePage() {
   useEffect(() => loadWhileMounted(() => store.countTransactions(), (n) => setHasData(n > 0)), [store]);
 
   async function trySample() {
-    await store.loadSampleData(SAMPLE_CSV, { now: new Date().toISOString(), newId: () => crypto.randomUUID() });
+    await store.loadSampleData(SAMPLE_CSV, { now: new Date().toISOString(), newId: newId });
     navigate('overview');
   }
 

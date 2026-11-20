@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import Dexie from 'dexie';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { CATEGORY_IDS as C } from '../core/categories.ts';
 import { openStore } from '../storage/store.ts';
 import { App } from './App.tsx';
@@ -129,5 +129,21 @@ describe('App', () => {
     await user.click(await screen.findByRole('link', { name: 'Add statement' }));
     await upload(generic);
     expect(await screen.findByRole('heading', { name: 'Nothing new in this file' })).toBeInTheDocument();
+  });
+});
+
+describe('App without crypto.randomUUID (plain-HTTP pages, older Safari)', () => {
+  it('still loads the sample data', async () => {
+    const name = dbName(); // the test helper itself uses crypto.randomUUID
+    vi.stubGlobal('crypto', { getRandomValues: crypto.getRandomValues.bind(crypto) });
+    try {
+      const user = userEvent.setup();
+      render(<App dbName={name} />);
+      await user.click((await screen.findAllByRole('button', { name: 'Try it with sample data' }))[0]!);
+      expect(await screen.findByRole('heading', { name: 'Budgets' })).toBeInTheDocument();
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 });
