@@ -13,6 +13,7 @@ import { CategoryLimit } from '../CategoryLimit.tsx';
 import { DeleteCategory } from '../DeleteCategory.tsx';
 import { RulesList } from '../RulesList.tsx';
 import { loadWhileMounted } from '../load.ts';
+import { newId } from '../new-id.ts';
 import { useStore } from '../useStore.ts';
 
 interface Data {
@@ -34,7 +35,7 @@ async function fetchData(store: SpendioStore): Promise<Data> {
   return { transactions, categories, rules, budgets, settings };
 }
 
-const context = () => ({ now: new Date().toISOString(), newId: () => crypto.randomUUID() });
+const context = () => ({ now: new Date().toISOString(), newId: newId });
 
 /** Categories (names, colors, limits) and categorization rules (docs/SPEC.md §12). */
 export function CategoriesPage() {
@@ -65,14 +66,14 @@ export function CategoriesPage() {
             categories={data.categories}
             usage={usage}
             onUpdate={(id, changes) => after(store.updateCategory(id, changes))}
-            onAdd={(input) => after(store.addCategory(input, () => crypto.randomUUID()))}
+            onAdd={(input) => after(store.addCategory(input, newId))}
             renderExtra={(category) => (
               <>
                 <CategoryLimit
                   category={category}
                   limit={limitFor(data.budgets, category.id, period)}
                   period={period}
-                  onSetLimit={(amount) => after(store.setBudgetLimit(category.id, amount, period, () => crypto.randomUUID()))}
+                  onSetLimit={(amount) => after(store.setBudgetLimit(category.id, amount, period, newId))}
                 />
                 <DeleteCategory
                   category={category}

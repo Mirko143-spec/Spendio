@@ -8,9 +8,9 @@ import { SAMPLE_CSV } from '../sample-data.ts';
 import { navigate } from '../router.ts';
 import { UploadScreen } from '../UploadScreen.tsx';
 import { loadWhileMounted } from '../load.ts';
+import { newId } from '../new-id.ts';
 import { useStore } from '../useStore.ts';
 
-const newId = () => crypto.randomUUID();
 const now = () => new Date().toISOString();
 
 /** True if the text reads as a table worth mapping: at least two columns and one data row. */

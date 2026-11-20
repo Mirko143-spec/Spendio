@@ -10,6 +10,7 @@ import { replaceParams, useRouteParams } from '../router.ts';
 import { TransactionFilters } from '../TransactionFilters.tsx';
 import { TransactionList } from '../TransactionList.tsx';
 import { loadWhileMounted } from '../load.ts';
+import { newId } from '../new-id.ts';
 import { useStore } from '../useStore.ts';
 
 interface Data {
@@ -27,7 +28,7 @@ async function fetchData(store: SpendioStore): Promise<Data> {
   return { transactions, categories, settings };
 }
 
-const context = () => ({ now: new Date().toISOString(), newId: () => crypto.randomUUID() });
+const context = () => ({ now: new Date().toISOString(), newId: newId });
 
 /** Every transaction, filterable, with categories editable inline (docs/SPEC.md §12). */
 export function TransactionsPage() {
